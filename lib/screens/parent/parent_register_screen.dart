@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../auth/otp_screen.dart';
 import '../parent_dashboard.dart';
+import '../terms_and_conditions_screen.dart';
 import '../../services/email_service.dart';
 import '../../services/auth_service.dart';
 
@@ -19,6 +21,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   final _addressController = TextEditingController();
   final _emailController = TextEditingController();
   
+  String? _location;
   bool _acceptedTerms = false;
 
   final List<Map<String, TextEditingController>> _children = [
@@ -139,18 +142,67 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Fetching live location...')),
+                    const SnackBar(content: Text('Requesting GPS permissions & fetching location...')),
                   );
+                  
+                  try {
+                    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                    if (!serviceEnabled) {
+                      throw Exception('Location services are disabled.');
+                    }
+
+                    LocationPermission permission = await Geolocator.checkPermission();
+                    if (permission == LocationPermission.denied) {
+                      permission = await Geolocator.requestPermission();
+                      if (permission == LocationPermission.denied) {
+                        throw Exception('Location permissions are denied');
+                      }
+                    }
+                    
+                    if (permission == LocationPermission.deniedForever) {
+                      throw Exception('Location permissions are permanently denied.');
+                    } 
+
+                    final position = await Geolocator.getCurrentPosition();
+                    
+                    setState(() {
+                      _location = 'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+                    });
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Real location fetched successfully!')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to get location: $e')),
+                      );
+                    }
+                  }
                 },
                 icon: const Icon(Icons.my_location),
                 label: const Text('Fix Geo Location (Automated)'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.tertiary,
                   foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
+              if (_location != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Saved Location: $_location',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
@@ -218,16 +270,35 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
                 );
               }).toList(),
               const SizedBox(height: 16),
-              CheckboxListTile(
-                value: _acceptedTerms,
-                onChanged: (val) {
-                  setState(() {
-                    _acceptedTerms = val ?? false;
-                  });
-                },
-                title: const Text('I agree to the Terms and Conditions'),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
+              Row(
+                children: [
+                  Checkbox(
+                    value: _acceptedTerms,
+                    onChanged: (val) {
+                      setState(() {
+                        _acceptedTerms = val ?? false;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
+                        );
+                      },
+                      child: Text(
+                        'I agree to the Terms and Conditions',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               ElevatedButton(

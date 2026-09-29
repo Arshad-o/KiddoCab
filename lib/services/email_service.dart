@@ -22,7 +22,8 @@ class EmailService {
       ..html = '<h3>Welcome to KiddoCab!</h3><p>Your OTP is: <strong>$otp</strong></p><p>Please enter this to proceed.</p>';
 
     try {
-      final sendReport = await send(message, smtpServer);
+      // Added a 3-second timeout so it doesn't hang forever on Web/platforms without socket support
+      final sendReport = await send(message, smtpServer).timeout(const Duration(seconds: 3));
       print('Message sent: ' + sendReport.toString());
       return true;
     } catch (e) {

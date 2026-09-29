@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../auth/otp_screen.dart';
 import '../driver_dashboard.dart';
+import '../terms_and_conditions_screen.dart';
 import '../../services/email_service.dart';
 import '../../services/auth_service.dart';
 
@@ -157,16 +158,35 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
               _buildUploadButton('Vehicle Photos', Icons.directions_car),
               _buildUploadButton('Driver Photo', Icons.person_pin),
               const SizedBox(height: 16),
-              CheckboxListTile(
-                value: _acceptedTerms,
-                onChanged: (val) {
-                  setState(() {
-                    _acceptedTerms = val ?? false;
-                  });
-                },
-                title: const Text('I agree to the Terms and Conditions'),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
+              Row(
+                children: [
+                  Checkbox(
+                    value: _acceptedTerms,
+                    onChanged: (val) {
+                      setState(() {
+                        _acceptedTerms = val ?? false;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
+                        );
+                      },
+                      child: Text(
+                        'I agree to the Terms and Conditions',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               ElevatedButton(

@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/welcome_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Supabase.initialize(
+    url: 'https://ydspzbkbggpljeajjjwz.supabase.co',
+    anonKey: 'sb_publishable_KLbqZOu5vri7br9jdGlmgA_iIDzf6X6',
+  );
+  
   runApp(const KiddoCabApp());
 }
 
