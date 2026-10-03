@@ -81,7 +81,7 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              maxLength: 6,
+              maxLength: 10,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
