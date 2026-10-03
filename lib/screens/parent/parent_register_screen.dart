@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'location_picker_screen.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -150,94 +152,20 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
-                  onPressed: () => _pickImage(1),
-                  icon: const Icon(Icons.image),
-                  label: Text(_profile1 == null ? 'Upload Parent 1 Photo' : 'Photo Selected'),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Parent 1 Phone Number', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => value == null || value.isEmpty ? 'Please enter Parent 1 phone' : null,
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-                const Text('Parent 2 (Optional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _name2Controller,
-                  decoration: const InputDecoration(labelText: 'Parent 2 Name', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: () => _pickImage(2),
-                  icon: const Icon(Icons.image),
-                  label: Text(_profile2 == null ? 'Upload Parent 2 Photo' : 'Photo Selected'),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phone2Controller,
-                  decoration: const InputDecoration(labelText: 'Parent 2 Phone Number', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your address' : null,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
                 onPressed: () async {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Requesting GPS permissions & fetching location...')),
+                  final LatLng? selectedLocation = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
                   );
                   
-                  try {
-                    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                    if (!serviceEnabled) {
-                      throw Exception('Location services are disabled.');
-                    }
-
-                    LocationPermission permission = await Geolocator.checkPermission();
-                    if (permission == LocationPermission.denied) {
-                      permission = await Geolocator.requestPermission();
-                      if (permission == LocationPermission.denied) {
-                        throw Exception('Location permissions are denied');
-                      }
-                    }
-                    
-                    if (permission == LocationPermission.deniedForever) {
-                      throw Exception('Location permissions are permanently denied.');
-                    } 
-
-                    final position = await Geolocator.getCurrentPosition();
-                    
+                  if (selectedLocation != null) {
                     setState(() {
-                      _location = 'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+                      _location = 'Lat: ${selectedLocation.latitude.toStringAsFixed(4)}, Lng: ${selectedLocation.longitude.toStringAsFixed(4)}';
                     });
-                    
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Real location fetched successfully!')),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to get location: $e')),
-                      );
-                    }
                   }
                 },
-                icon: const Icon(Icons.my_location),
-                label: const Text('Fix Geo Location (Automated)'),
+                icon: const Icon(Icons.map),
+                label: const Text('Set Precise Pick-up Location on Map'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.tertiary,
                   foregroundColor: Colors.white,
