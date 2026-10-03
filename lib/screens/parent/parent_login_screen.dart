@@ -23,7 +23,7 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
       return;
     }
     
-    if (!AuthService.checkUserExists(identifier)) {
+    if (!(await AuthService.checkUserExists(identifier))) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account does not exist, please register.')));
       return;
     }

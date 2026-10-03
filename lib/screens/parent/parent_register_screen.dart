@@ -55,7 +55,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
 
-    if (AuthService.checkUserExists(email) || AuthService.checkUserExists(phone)) {
+    if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User already exists with this email or phone number!')),
       );
@@ -81,7 +81,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
             expectedOtp: otp,
             onSuccess: () {
               final firstChildName = _children[0]['name']!.text.trim();
-              AuthService.registerUser(email, phone, childName: firstChildName);
+              AuthService.registerUser(email, phone, 'parent', childName: firstChildName);
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const ParentDashboard()),

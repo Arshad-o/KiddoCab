@@ -1,18 +1,37 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class AuthService {
-  // Mock database for registered users
-  static final List<String> registeredEmails = [];
-  static final List<String> registeredPhones = [];
-  
   static String? currentChildName;
 
-  static bool checkUserExists(String identifier) {
-    return registeredEmails.contains(identifier.toLowerCase()) || 
-           registeredPhones.contains(identifier);
+  static Future<bool> checkUserExists(String identifier) async {
+    final supabase = Supabase.instance.client;
+    
+    // Check if user exists by email or phone
+    final response = await supabase
+        .from('users')
+        .select('id')
+        .or('email.eq.\$identifier,phone.eq.\$identifier')
+        .limit(1);
+        
+    return response.isNotEmpty;
   }
 
-  static void registerUser(String email, String phone, {String? childName}) {
-    if (email.isNotEmpty) registeredEmails.add(email.toLowerCase());
-    if (phone.isNotEmpty) registeredPhones.add(phone);
-    if (childName != null) currentChildName = childName;
+  static Future<void> registerUser(String email, String phone, String role, {String? childName}) async {
+    final supabase = Supabase.instance.client;
+    
+    if (childName != null) {
+      currentChildName = childName;
+    }
+
+    try {
+      await supabase.from('users').insert({
+        'email': email.toLowerCase(),
+        'phone': phone,
+        'role': role,
+        'child_name': childName,
+      });
+    } catch (e) {
+      print('Error saving to Supabase: \$e');
+    }
   }
 }

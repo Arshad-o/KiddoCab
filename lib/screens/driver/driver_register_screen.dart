@@ -36,7 +36,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
 
-    if (AuthService.checkUserExists(email) || AuthService.checkUserExists(phone)) {
+    if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User already exists with this email or phone number!')),
       );
@@ -61,7 +61,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
             email: email,
             expectedOtp: otp,
             onSuccess: () {
-              AuthService.registerUser(email, phone);
+              AuthService.registerUser(email, phone, 'driver');
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const DriverDashboard()),
