@@ -1,8 +1,82 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DriverDashboard extends StatelessWidget {
+class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
+
+  @override
+  State<DriverDashboard> createState() => _DriverDashboardState();
+}
+
+class _DriverDashboardState extends State<DriverDashboard> {
+  bool _isBroadcasting = false;
+  StreamSubscription<Position>? _positionStream;
+  final _supabase = Supabase.instance.client;
+
+  Future<void> _toggleBroadcast() async {
+    if (_isBroadcasting) {
+      // Stop broadcasting
+      await _positionStream?.cancel();
+      setState(() => _isBroadcasting = false);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location broadcast stopped.')),
+      );
+      return;
+    }
+
+    // Start broadcasting
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location services are disabled.')));
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are denied.')));
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Location permissions are permanently denied.')));
+      return;
+    }
+
+    setState(() => _isBroadcasting = true);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Live tracking started!')));
+
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10, // update every 10 meters
+    );
+
+    _positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
+      try {
+        await _supabase.from('locations').insert({
+          'driver_email': 'current_driver@test.com', // In a real app, use the actual logged-in user
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
+        print('Location sent to Supabase: \${position.latitude}, \${position.longitude}');
+      } catch (e) {
+        print('Error sending location: \$e');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,11 +148,14 @@ class DriverDashboard extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.location_on),
-                label: const Text('Broadcast Location', style: TextStyle(fontSize: 18)),
+                onPressed: _toggleBroadcast,
+                icon: Icon(_isBroadcasting ? Icons.stop_circle : Icons.location_on),
+                label: Text(
+                  _isBroadcasting ? 'Stop Broadcasting' : 'Broadcast Location',
+                  style: const TextStyle(fontSize: 18),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.secondary,
+                  backgroundColor: _isBroadcasting ? Colors.red : theme.colorScheme.secondary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
