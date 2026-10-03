@@ -125,7 +125,7 @@ class _CabSelectionScreenState extends State<CabSelectionScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                '\${trip['seats']} seats left',
+                                '\${trip[\"seats\"]} seats left',
                                 style: TextStyle(color: theme.colorScheme.tertiary, fontWeight: FontWeight.bold),
                               ),
                             )

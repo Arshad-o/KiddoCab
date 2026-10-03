@@ -8,7 +8,7 @@ class NotificationService {
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings();
     const InitializationSettings initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
     
-    await _notificationsPlugin.initialize(initSettings);
+    await _notificationsPlugin.initialize(settings: initSettings);
     
     // Request permission for Android 13+
     _notificationsPlugin
@@ -26,6 +26,6 @@ class NotificationService {
     );
     const NotificationDetails details = NotificationDetails(android: androidDetails);
     
-    await _notificationsPlugin.show(id, title, body, details);
+    await _notificationsPlugin.show(id: id, title: title, body: body, notificationDetails: details);
   }
 }
