@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../auth/otp_screen.dart';
 import '../parent_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
@@ -21,6 +23,13 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   final _addressController = TextEditingController();
   final _emailController = TextEditingController();
   
+  // 2nd Parent
+  final _name2Controller = TextEditingController();
+  final _phone2Controller = TextEditingController();
+
+  File? _profile1;
+  File? _profile2;
+  
   String? _location;
   bool _acceptedTerms = false;
 
@@ -31,7 +40,20 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
     }
   ];
 
+
+  Future<void> _pickImage(int parentIndex) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        if (parentIndex == 1) _profile1 = File(pickedFile.path);
+        else _profile2 = File(pickedFile.path);
+      });
+    }
+  }
+
   void _addChild() {
+
     setState(() {
       _children.add({
         'name': TextEditingController(),
@@ -122,23 +144,45 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Parent Name',
-                  border: OutlineInputBorder(),
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Parent 1 Name', border: OutlineInputBorder()),
+                  validator: (value) => value == null || value.isEmpty ? 'Please enter Parent 1 name' : null,
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _pickImage(1),
+                  icon: const Icon(Icons.image),
+                  label: Text(_profile1 == null ? 'Upload Parent 1 Photo' : 'Photo Selected'),
                 ),
-                keyboardType: TextInputType.phone,
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-              ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(labelText: 'Parent 1 Phone Number', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) => value == null || value.isEmpty ? 'Please enter Parent 1 phone' : null,
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
+                const Text('Parent 2 (Optional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _name2Controller,
+                  decoration: const InputDecoration(labelText: 'Parent 2 Name', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _pickImage(2),
+                  icon: const Icon(Icons.image),
+                  label: Text(_profile2 == null ? 'Upload Parent 2 Photo' : 'Photo Selected'),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phone2Controller,
+                  decoration: const InputDecoration(labelText: 'Parent 2 Phone Number', border: OutlineInputBorder()),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 24),
+                const Divider(),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _addressController,
