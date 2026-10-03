@@ -23,15 +23,25 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   Future<void> _fetchCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) throw Exception('Location services are disabled.');
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled on your device.');
+      }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) throw Exception('Location permissions are denied');
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions were denied.');
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied. Please allow them in Settings.');
       }
 
-      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
       final newLatLng = LatLng(position.latitude, position.longitude);
 
       setState(() {
@@ -43,7 +53,12 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not get location: \$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not get location: $e'),
+            duration: const Duration(seconds: 4),
+          )
+        );
       }
     }
   }
