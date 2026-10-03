@@ -79,10 +79,9 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
-              Icons.family_restroom,
-              size: 80,
-              color: Colors.blueGrey,
+            Image.asset(
+              'assets/images/parentimg.png',
+              height: 100,
             ),
             const SizedBox(height: 32),
             TextField(

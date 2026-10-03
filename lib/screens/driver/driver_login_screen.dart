@@ -79,10 +79,9 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
-              Icons.directions_bus,
-              size: 80,
-              color: Colors.blueGrey,
+            Image.asset(
+              'assets/images/driverimg.webp',
+              height: 100,
             ),
             const SizedBox(height: 32),
             TextField(
