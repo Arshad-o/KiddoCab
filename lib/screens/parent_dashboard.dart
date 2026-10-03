@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../services/auth_service.dart';
 
 class ParentDashboard extends StatelessWidget {
   const ParentDashboard({super.key});
@@ -12,6 +14,16 @@ class ParentDashboard extends StatelessWidget {
         title: const Text('Parent Dashboard'),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Push Notifications Enabled!')),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -70,7 +82,7 @@ class ParentDashboard extends StatelessWidget {
                         backgroundColor: theme.colorScheme.secondary.withOpacity(0.2),
                         child: Icon(Icons.person, color: theme.colorScheme.secondary),
                       ),
-                      title: const Text('Emma'),
+                      title: Text(AuthService.currentChildName ?? 'Emma'),
                       subtitle: const Text('In Transit - Heading Home'),
                       trailing: Chip(
                         label: const Text('Boarded'),
@@ -91,27 +103,17 @@ class ParentDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
+            SizedBox(
               height: 300,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  )
-                ],
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.map, size: 48, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text('Interactive GPS Map Placeholder', style: TextStyle(color: Colors.grey)),
-                  ],
+                child: const GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(28.6139, 77.2090),
+                    zoom: 14.0,
+                  ),
+                  myLocationEnabled: true,
+                  zoomControlsEnabled: false,
                 ),
               ),
             ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../auth/otp_screen.dart';
 import '../driver_dashboard.dart';
+import 'driver_register_screen.dart';
 import '../../services/email_service.dart';
+import '../../services/auth_service.dart';
 
 class DriverLoginScreen extends StatefulWidget {
   const DriverLoginScreen({super.key});
@@ -15,7 +17,18 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
   final _passwordController = TextEditingController();
 
   Future<void> _login() async {
-    final email = _identifierController.text.isEmpty ? 'kiddocabspace@gmail.com' : _identifierController.text;
+    final identifier = _identifierController.text.trim();
+    if (identifier.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter email or phone')));
+      return;
+    }
+    
+    if (!AuthService.checkUserExists(identifier)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account does not exist, please register.')));
+      return;
+    }
+    
+    final email = identifier.contains('@') ? identifier : 'kiddocabspace@gmail.com';
     final otp = EmailService.generateOTP();
     
     // Show a loading snackbar
@@ -90,7 +103,18 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
               ),
               obscureText: true,
             ),
-            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Password reset link sent to your email!')),
+                  );
+                },
+                child: const Text('Forgot Password?'),
+              ),
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _login,
               style: ElevatedButton.styleFrom(
@@ -102,6 +126,22 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
                 ),
               ),
               child: const Text('Login & Verify', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('New to KiddoCab?'),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DriverRegisterScreen()),
+                    );
+                  },
+                  child: const Text('Register', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ],
         ),

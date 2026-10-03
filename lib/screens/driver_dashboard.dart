@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class DriverDashboard extends StatelessWidget {
   const DriverDashboard({super.key});
@@ -37,6 +38,17 @@ class DriverDashboard extends StatelessWidget {
                 ),
                 Icon(Icons.route, color: theme.colorScheme.primary, size: 32),
               ],
+            ),
+          ),
+          SizedBox(
+            height: 200,
+            child: const GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(28.6139, 77.2090),
+                zoom: 14.0,
+              ),
+              myLocationEnabled: true,
+              zoomControlsEnabled: false,
             ),
           ),
           Expanded(

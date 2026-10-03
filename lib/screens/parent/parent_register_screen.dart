@@ -80,7 +80,8 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
             email: email,
             expectedOtp: otp,
             onSuccess: () {
-              AuthService.registerUser(email, phone);
+              final firstChildName = _children[0]['name']!.text.trim();
+              AuthService.registerUser(email, phone, childName: firstChildName);
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const ParentDashboard()),
