@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/auth_service.dart';
+import 'parent/cab_selection_screen.dart';
 
 class ParentDashboard extends StatelessWidget {
   const ParentDashboard({super.key});
@@ -30,6 +31,25 @@ class ParentDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // NEW BUTTON: Find a Cab
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CabSelectionScreen()),
+                );
+              },
+              icon: const Icon(Icons.search),
+              label: const Text('Find & Assign a Cab Route', style: TextStyle(fontSize: 16)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.secondary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+              ),
+            ),
+            const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
