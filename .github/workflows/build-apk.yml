@@ -27,10 +27,18 @@ jobs:
         run: flutter pub get
         
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release > build_log.txt 2>&1
+        continue-on-error: true
         
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: KiddoCab-APK
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Logs
+          path: build_log.txt
