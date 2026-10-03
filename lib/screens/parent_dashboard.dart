@@ -4,8 +4,57 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/auth_service.dart';
 import 'parent/cab_selection_screen.dart';
 
-class ParentDashboard extends StatelessWidget {
-  const ParentDashboard({super.key});
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/notification_service.dart';
+
+class ParentDashboard extends StatefulWidget {
+  
+  @override
+  State<ParentDashboard> createState() => _ParentDashboardState();
+}
+
+class _ParentDashboardState extends State<ParentDashboard> {
+
+    final _supabase = Supabase.instance.client;
+  RealtimeChannel? _locationsChannel;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToDriverStatus();
+  }
+
+  void _listenToDriverStatus() {
+    // Listen for incoming live tracking updates from the Driver!
+    _locationsChannel = _supabase.channel('public:locations').onPostgresChanges(
+      event: PostgresChangeEvent.insert,
+      schema: 'public',
+      table: 'locations',
+      callback: (payload) {
+        // Trigger a push notification to the parent's phone!
+        NotificationService.showNotification(
+          id: 1,
+          title: '🚐 Trip Started!',
+          body: 'Your KiddoCab has started broadcasting its live location.',
+        );
+        
+        // Simulating the "2 stops away" notification shortly after
+        Future.delayed(const Duration(seconds: 15), () {
+          NotificationService.showNotification(
+            id: 2,
+            title: '📍 Almost There!',
+            body: 'The KiddoCab is 2 stops away. Please get ready.',
+          );
+        });
+      },
+    ).subscribe();
+  }
+
+  @override
+  void dispose() {
+    _locationsChannel?.unsubscribe();
+    super.dispose();
+  }
 
   Widget _buildGlassContainer({required Widget child, double opacity = 0.75, double radius = 24}) {
     return ClipRRect(
