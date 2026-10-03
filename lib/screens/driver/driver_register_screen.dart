@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../auth/otp_screen.dart';
 import '../driver_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
-import '../../services/email_service.dart';
+
 import '../../services/auth_service.dart';
 
 class DriverRegisterScreen extends StatefulWidget {
@@ -43,13 +43,13 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       return;
     }
 
-    final otp = EmailService.generateOTP();
+    
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Sending OTP...')),
     );
 
-    final success = await EmailService.sendOTP(email, otp);
+    final success = await AuthService.sendOtp(email);
 
     if (!mounted) return;
 
@@ -59,7 +59,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
         MaterialPageRoute(
           builder: (_) => OtpScreen(
             email: email,
-            expectedOtp: otp,
+            // expectedOtp removed
             onSuccess: () {
               AuthService.registerUser(email, phone, 'driver');
               Navigator.pushAndRemoveUntil(

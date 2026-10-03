@@ -5,7 +5,7 @@ import 'dart:io';
 import '../auth/otp_screen.dart';
 import '../parent_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
-import '../../services/email_service.dart';
+
 import '../../services/auth_service.dart';
 
 class ParentRegisterScreen extends StatefulWidget {
@@ -84,13 +84,13 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       return;
     }
 
-    final otp = EmailService.generateOTP();
+    
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Sending OTP...')),
     );
 
-    final success = await EmailService.sendOTP(email, otp);
+    final success = await AuthService.sendOtp(email);
 
     if (!mounted) return;
 
@@ -100,7 +100,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
         MaterialPageRoute(
           builder: (_) => OtpScreen(
             email: email,
-            expectedOtp: otp,
+            // expectedOtp removed
             onSuccess: () {
               final firstChildName = _children[0]['name']!.text.trim();
               AuthService.registerUser(email, phone, 'parent', childName: firstChildName);

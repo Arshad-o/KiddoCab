@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email;
-  final String expectedOtp;
+  // expectedOtp removed for Supabase Auth
   final VoidCallback onSuccess;
 
   const OtpScreen({
     super.key,
     required this.email,
-    required this.expectedOtp,
+    // required this.expectedOtp,
     required this.onSuccess,
   });
 
@@ -19,16 +20,19 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final _otpController = TextEditingController();
 
-  void _verifyOtp() {
-    if (_otpController.text == widget.expectedOtp) {
+  Future<void> _verifyOtp() async {
+    final isValid = await AuthService.verifyOtp(widget.email, _otpController.text.trim());
+    if (isValid) {
       widget.onSuccess();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid OTP! Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid OTP! Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
