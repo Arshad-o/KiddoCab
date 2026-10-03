@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/notification_service.dart';
 
 class ParentDashboard extends StatefulWidget {
+  const ParentDashboard({super.key});
   
   @override
   State<ParentDashboard> createState() => _ParentDashboardState();

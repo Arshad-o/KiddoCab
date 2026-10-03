@@ -50,7 +50,7 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
             onSuccess: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const ParentDashboard()),
+                MaterialPageRoute(builder: (_) => ParentDashboard()),
                 (route) => false,
               );
             },

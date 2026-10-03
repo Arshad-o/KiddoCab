@@ -108,7 +108,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
               AuthService.registerUser(email, phone, 'parent', childName: firstChildName);
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const ParentDashboard()),
+                MaterialPageRoute(builder: (_) => ParentDashboard()),
                 (route) => false,
               );
             },
