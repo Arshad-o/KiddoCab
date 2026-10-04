@@ -26,6 +26,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
         
+      - name: Patch legacy AGP plugins
+        run: |
+          sed -i 's/android {/android {\n    namespace "appmire.be.flutterjailbreakdetection"/g' ~/.pub-cache/hosted/pub.dev/flutter_jailbreak_detection-*/android/build.gradle
+          
       - name: Build APK (with Military-Grade Obfuscation)
         run: flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
         continue-on-error: false
