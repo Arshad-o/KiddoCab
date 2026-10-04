@@ -96,7 +96,17 @@ class _ParentDashboardState extends State<ParentDashboard> {
       callback: (payload) {
         final newRecord = payload.newRecord;
         
-        // If the alert is for THIS parent's child
+        // Global Trip Started Alert
+        if (newRecord['child_name'] == 'ALL') {
+          NotificationService.showNotification(
+            id: 888,
+            title: '🚀 TRIP STARTED',
+            body: newRecord['message'],
+          );
+          return;
+        }
+
+        // If the alert is for THIS parent's child specifically
         if (newRecord['child_name'] == (AuthService.currentChildName ?? 'Emma Smith')) {
           // Trigger high-priority mobile push notification
           NotificationService.showNotification(

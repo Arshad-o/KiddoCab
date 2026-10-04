@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/notification_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'driver/driver_login_screen.dart';
 import 'chat_screen.dart';
@@ -34,6 +35,15 @@ class _DriverDashboardState extends State<DriverDashboard> {
   MapType _selectedMapType = MapType.normal;
 
   String _selectedTrip = 'Morning Pickup #1';
+  final Map<String, String> _tripTimes = {
+    'Morning Pickup #1': '06:00', // 24-hour format
+    'Afternoon Drop-off #3': '15:30',
+    'Field Trip - Museum': '09:00',
+  };
+  
+  Timer? _scheduleTimer;
+  bool _tripReminderShown = false;
+
   final List<String> _trips = [
     'Morning Pickup #1',
     'Afternoon Drop-off #3',
@@ -66,6 +76,60 @@ class _DriverDashboardState extends State<DriverDashboard> {
   void initState() {
     super.initState();
     _determinePosition();
+    
+    // Check every 10 seconds if it's time to alert the driver
+    _scheduleTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _checkTripSchedule();
+    });
+  }
+  
+  void _checkTripSchedule() {
+    if (_tripReminderShown || _isBroadcasting) return;
+    
+    final now = DateTime.now();
+    final tripTimeStr = _tripTimes[_selectedTrip] ?? '06:00';
+    final parts = tripTimeStr.split(':');
+    final tripHour = int.parse(parts[0]);
+    final tripMinute = int.parse(parts[1]);
+    
+    // Create a DateTime for the trip time today
+    final tripTime = DateTime(now.year, now.month, now.day, tripHour, tripMinute);
+    
+    // If we are within 15 minutes of the trip, or past it, sound the alarm!
+    if (now.isAfter(tripTime.subtract(const Duration(minutes: 15)))) {
+      _tripReminderShown = true;
+      
+      // Send Mobile Push Notification to Driver
+      NotificationService.showNotification(
+        id: 55,
+        title: '⏰ TRIP REMINDER ALARM',
+        body: 'It is almost time for $_selectedTrip! Get ready and Start the Trip.',
+      );
+      
+      // Show in-app alarm
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Row(children: [Icon(Icons.access_alarms, color: Colors.orange), SizedBox(width: 8), Text('Time to Drive!')]),
+            content: Text('Your scheduled trip ($_selectedTrip) starts at $tripTimeStr. Are you ready to begin?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Not Yet')),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _toggleBroadcast(); // Start Trip!
+                },
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('START TRIP NOW'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+              )
+            ],
+          )
+        );
+      }
+    }
   }
 
   Future<void> _determinePosition() async {
@@ -105,9 +169,20 @@ class _DriverDashboardState extends State<DriverDashboard> {
       setState(() => _isBroadcasting = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Broadcasting live location...')),
+          const SnackBar(content: Text('Trip Started! Parents notified.'), backgroundColor: Colors.green),
         );
       }
+      
+      // Broadcast to ALL parents that the trip started via the alerts table
+      try {
+        _supabase.from('alerts').insert({
+          'child_name': 'ALL', // Global alert identifier
+          'message': '🚀 TRIP STARTED: Your driver has started the $_selectedTrip route!',
+        });
+      } catch (e) {
+        print('Trip start alert error: $e');
+      }
+
       _positionStream = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
@@ -248,6 +323,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
   @override
   void dispose() {
     _positionStream?.cancel();
+    _scheduleTimer?.cancel();
     super.dispose();
   }
 
@@ -446,13 +522,13 @@ class _DriverDashboardState extends State<DriverDashboard> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _toggleBroadcast,
-              icon: Icon(_isBroadcasting ? Icons.stop_circle : Icons.location_on),
+              icon: Icon(_isBroadcasting ? Icons.stop_circle : Icons.play_arrow),
               label: Text(
-                _isBroadcasting ? 'Stop Broadcasting' : 'Broadcast Location',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                _isBroadcasting ? 'END TRIP' : '▶ START TRIP',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isBroadcasting ? Colors.red : theme.colorScheme.secondary,
+                backgroundColor: _isBroadcasting ? Colors.red : Colors.green,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
