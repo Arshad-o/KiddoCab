@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'driver/driver_login_screen.dart';
+import 'chat_screen.dart';
 
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
@@ -623,6 +624,21 @@ class _DriverDashboardState extends State<DriverDashboard> {
             _buildLiveMap(theme),
             _buildProfile(theme),
           ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ChatScreen(
+                  otherUserId: 'parent-placeholder-id', // MVP mapping
+                  otherUserName: 'Parent (Noah)',
+                )
+              ),
+            );
+          },
+          backgroundColor: theme.colorScheme.secondary,
+          child: const Icon(Icons.chat, color: Colors.white),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'parent/parent_login_screen.dart';
+import 'admin/admin_dashboard.dart';
 import 'parent/parent_register_screen.dart';
 import 'driver/driver_login_screen.dart';
 import 'driver/driver_register_screen.dart';

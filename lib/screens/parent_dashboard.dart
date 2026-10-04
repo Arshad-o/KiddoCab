@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'parent/cab_selection_screen.dart';
 import 'parent/parent_login_screen.dart';
+import 'chat_screen.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
