@@ -26,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
         
-      - name: Build APK
-        run: flutter build apk --release > build_log.txt 2>&1
+      - name: Build APK (with Military-Grade Obfuscation)
+        run: flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols > build_log.txt 2>&1
         continue-on-error: true
         
       - name: Upload APK
