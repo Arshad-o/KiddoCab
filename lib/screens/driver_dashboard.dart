@@ -193,9 +193,21 @@ class _DriverDashboardState extends State<DriverDashboard> {
     );
   }
 
-  void _triggerAntiSkipAlarm(List<String> missing) {
+  void _triggerAntiSkipAlarm(List<String> missing) async {
     // Attempt system beep
     print('\x07');
+    
+    // 1. Send Alert to Parents via Supabase
+    for (String child in missing) {
+      try {
+        await _supabase.from('alerts').insert({
+          'child_name': child,
+          'message': 'CRITICAL: Driver left location without FRS scanning!',
+        });
+      } catch (e) {
+        print('Error sending alert: $e');
+      }
+    }
     
     showDialog(
       context: context,
