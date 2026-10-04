@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import 'parent/cab_selection_screen.dart';
@@ -192,9 +192,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
           _hasTriggeredStartNotification = true;
           NotificationService.showNotification(
             id: 1,
-          title: '🚐 Trip Started!',
-          body: 'Your KiddoCab has started broadcasting its live location.',
-        );
+            title: '🚐 Trip Started!',
+            body: 'Your KiddoCab has started broadcasting its live location.',
+          );
+        }
         Future.delayed(const Duration(seconds: 15), () {
           NotificationService.showNotification(
             id: 2,
