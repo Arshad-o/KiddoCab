@@ -32,6 +32,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   // Common
   final _emailController = TextEditingController();
   String? _location;
+  String? _dropLocation;
   bool _acceptedTerms = false;
   bool _isLoading = false;
 
@@ -104,6 +105,13 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
     if (_location == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please set your precise pick-up location!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_dropLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please set your precise drop-off (School) location!'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -326,7 +334,33 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
               ),
               if (_location != null) ...[
                 const SizedBox(height: 8),
-                Text('Location Saved!', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text('Pick-up Location Saved!', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              ],
+              
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final LatLng? selectedLocation = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
+                  );
+                  if (selectedLocation != null) {
+                    setState(() {
+                      _dropLocation = 'Lat: ${selectedLocation.latitude.toStringAsFixed(4)}, Lng: ${selectedLocation.longitude.toStringAsFixed(4)}';
+                    });
+                  }
+                },
+                icon: const Icon(Icons.school),
+                label: const Text('Set Precise Drop-off (School) *'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _dropLocation == null ? theme.colorScheme.tertiary : Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+              if (_dropLocation != null) ...[
+                const SizedBox(height: 8),
+                Text('Drop-off Location Saved!', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
               ],
               
               const SizedBox(height: 24),
