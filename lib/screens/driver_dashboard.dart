@@ -153,6 +153,11 @@ class _DriverDashboardState extends State<DriverDashboard> {
           student['lat'], student['lng']
         );
 
+        // Calculate live ETA (assuming city speed 25 km/h = ~416 meters / min)
+        int etaMins = (dist / 416).ceil();
+        String distStr = dist > 1000 ? '${(dist/1000).toStringAsFixed(1)} km' : '${dist.toStringAsFixed(0)} m';
+        student['live_eta'] = 'ETA: $etaMins min ($distStr)';
+
         // 1. Auto-Popup Logic (Driver enters 50m radius)
         if (dist <= 50 && !_promptedChildren.contains(student['name'])) {
           _promptedChildren.add(student['name']);
@@ -318,7 +323,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
     }
   }
 
-  Widget _buildStudentTile(String name, String status, Color statusColor, double lat, double lng, String phone) {
+  Widget _buildStudentTile(String name, String status, Color statusColor, double lat, double lng, String phone, String? etaText) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -339,11 +344,26 @@ class _DriverDashboardState extends State<DriverDashboard> {
           child: const Icon(Icons.person, color: Colors.grey),
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Row(
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.phone, size: 14, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text(phone, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            Row(
+              children: [
+                const Icon(Icons.phone, size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(phone, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+            if (etaText != null && status == 'Waiting') ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.navigation, size: 14, color: Colors.blueAccent),
+                  const SizedBox(width: 4),
+                  Text(etaText, style: const TextStyle(color: Colors.blueAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ]
           ],
         ),
         trailing: status == 'Waiting'
@@ -450,7 +470,15 @@ class _DriverDashboardState extends State<DriverDashboard> {
           ),
           const SizedBox(height: 16),
           ...(_tripStudents[_selectedTrip] ?? []).map((student) {
-            return _buildStudentTile(student['name'], student['status'], student['color'], student['lat'], student['lng'], student['phone'] ?? 'N/A');
+            return _buildStudentTile(
+              student['name'], 
+              student['status'], 
+              student['color'], 
+              student['lat'], 
+              student['lng'], 
+              student['phone'] ?? 'N/A',
+              student['live_eta']
+            );
           }).toList(),
         ],
       ),
