@@ -7,7 +7,6 @@ import 'dart:io';
 import '../auth/otp_screen.dart';
 import '../parent_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
-
 import '../../services/auth_service.dart';
 
 class ParentRegisterScreen extends StatefulWidget {
@@ -20,28 +19,30 @@ class ParentRegisterScreen extends StatefulWidget {
 class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   
+  // Parent 1
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _emailController = TextEditingController();
-  
-  // 2nd Parent
+  File? _profile1;
+
+  // Parent 2
   final _name2Controller = TextEditingController();
   final _phone2Controller = TextEditingController();
-
-  File? _profile1;
   File? _profile2;
-  
+
+  // Common
+  final _emailController = TextEditingController();
   String? _location;
   bool _acceptedTerms = false;
+  bool _isLoading = false;
 
-  final List<Map<String, TextEditingController>> _children = [
+  // Children
+  final List<Map<String, dynamic>> _children = [
     {
       'name': TextEditingController(),
       'school': TextEditingController(),
+      'frs_photo': null,
     }
   ];
-
 
   Future<void> _pickImage(int parentIndex) async {
     final picker = ImagePicker();
@@ -54,46 +55,105 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
     }
   }
 
-  void _addChild() {
+  Future<void> _scanFrsPhoto(int childIndex) async {
+    final picker = ImagePicker();
+    // Using camera for live FRS scan
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera, 
+      preferredCameraDevice: CameraDevice.front,
+      imageQuality: 80,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _children[childIndex]['frs_photo'] = File(pickedFile.path);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('FRS Scan completed successfully!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+        );
+      }
+    }
+  }
 
+  void _addChild() {
     setState(() {
       _children.add({
         'name': TextEditingController(),
         'school': TextEditingController(),
+        'frs_photo': null,
       });
     });
   }
 
+  void _removeChild(int index) {
+    if (_children.length > 1) {
+      setState(() {
+        _children.removeAt(index);
+      });
+    }
+  }
+
   Future<void> _proceed() async {
     if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all highlighted fields in red'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please set your precise pick-up location!'), backgroundColor: Colors.red),
+      );
       return;
     }
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the Terms and Conditions')),
+        const SnackBar(content: Text('Please accept the Terms and Conditions'), backgroundColor: Colors.red),
       );
       return;
     }
+
+    // Verify all children have FRS scans
+    for (int i = 0; i < _children.length; i++) {
+      if (_children[i]['frs_photo'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please complete the FRS Scan for Child ${i + 1}'), backgroundColor: Colors.red),
+        );
+        return;
+      }
+    }
+
+    setState(() => _isLoading = true);
 
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
 
+    // Check if user already exists
     if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User already exists with this email or phone number!')),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('These credentials already exist! Please use a different email or phone.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
       return;
     }
 
-    
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending OTP...')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sending OTP...')),
+      );
+    }
 
     final success = await AuthService.sendOtp(email);
 
+    setState(() => _isLoading = false);
     if (!mounted) return;
 
     if (success) {
@@ -102,13 +162,17 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
         MaterialPageRoute(
           builder: (_) => OtpScreen(
             email: email,
-            // expectedOtp removed
             onSuccess: () {
+              // Extract names for the current logic
               final firstChildName = _children[0]['name']!.text.trim();
+              
+              // In a real app, here you would upload the photos to Supabase Storage
+              // and insert the children into a 'children' table with parent_id.
+              
               AuthService.registerUser(email, phone, 'parent', childName: firstChildName);
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => ParentDashboard()),
+                MaterialPageRoute(builder: (_) => const ParentDashboard()),
                 (route) => false,
               );
             },
@@ -117,9 +181,28 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email or try again.')),
+        const SnackBar(content: Text('Failed to send OTP. Please check your email.'), backgroundColor: Colors.red),
       );
     }
+  }
+
+  Widget _buildPhotoPicker(String label, File? photo, VoidCallback onPick) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 40,
+          backgroundColor: Colors.grey[200],
+          backgroundImage: photo != null ? FileImage(photo) : null,
+          child: photo == null ? const Icon(Icons.person, size: 40, color: Colors.grey) : null,
+        ),
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: onPick,
+          icon: const Icon(Icons.camera_alt),
+          label: Text(label),
+        )
+      ],
+    );
   }
 
   @override
@@ -131,33 +214,102 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction, // Highlights red on error
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
-                child: Image.asset(
-                  'assets/images/parentimg.png',
-                  height: 80,
-                ),
+                child: Image.asset('assets/images/parentimg.png', height: 80),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              
+              // Parent 1 Section
+              Text('Parent 1 Details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+              const Divider(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _phoneController,
+                          decoration: const InputDecoration(labelText: 'Phone *', border: OutlineInputBorder()),
+                          keyboardType: TextInputType.phone,
+                          validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  _buildPhotoPicker('Add Photo', _profile1, () => _pickImage(1)),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Parent 2 Section
+              Text('Parent 2 Details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+              const Divider(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _name2Controller,
+                          decoration: const InputDecoration(labelText: 'Name (Optional)', border: OutlineInputBorder()),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _phone2Controller,
+                          decoration: const InputDecoration(labelText: 'Phone (Optional)', border: OutlineInputBorder()),
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  _buildPhotoPicker('Add Photo', _profile2, () => _pickImage(2)),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Common Details
+              Text('Account Details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+              const Divider(),
               TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Parent 1 Name', border: OutlineInputBorder()),
-                  validator: (value) => value == null || value.isEmpty ? 'Please enter Parent 1 name' : null,
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email Address *', border: OutlineInputBorder()),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Email is required';
+                  if (!value.contains('@')) return 'Enter a valid email';
+                  return null;
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
                 onPressed: () async {
                   final LatLng? selectedLocation = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
                   );
-                  
                   if (selectedLocation != null) {
                     setState(() {
                       _location = 'Lat: ${selectedLocation.latitude.toStringAsFixed(4)}, Lng: ${selectedLocation.longitude.toStringAsFixed(4)}';
@@ -165,134 +317,125 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
                   }
                 },
                 icon: const Icon(Icons.map),
-                label: const Text('Set Precise Pick-up Location on Map'),
+                label: const Text('Set Precise Pick-up Location *'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.tertiary,
+                  backgroundColor: _location == null ? theme.colorScheme.tertiary : Colors.green,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
               if (_location != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  'Saved Location: $_location',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                Text('Location Saved!', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
               ],
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your email';
-                  if (!value.contains('@')) return 'Please enter a valid email';
-                  return null;
-                },
-              ),
+              
               const SizedBox(height: 24),
+
+              // Children Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Children Details',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Children Details', style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
                   IconButton(
                     onPressed: _addChild,
-                    icon: const Icon(Icons.add_circle, size: 32),
-                    color: theme.colorScheme.secondary,
-                  ),
+                    icon: const Icon(Icons.add_circle, color: Colors.green, size: 32),
+                    tooltip: 'Add Child',
+                  )
                 ],
               ),
-              const SizedBox(height: 8),
+              const Divider(),
               ..._children.asMap().entries.map((entry) {
                 int idx = entry.key;
                 var child = entry.value;
+                bool hasPhoto = child['frs_photo'] != null;
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
+                  elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Child ${idx + 1}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Child ${idx + 1}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            if (idx > 0)
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _removeChild(idx),
+                              )
+                          ],
+                        ),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: child['name'],
-                          decoration: const InputDecoration(
-                            labelText: 'Child Name',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) => value == null || value.isEmpty ? 'Please enter child name' : null,
+                          decoration: const InputDecoration(labelText: 'Child Name *', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         TextFormField(
                           controller: child['school'],
-                          decoration: const InputDecoration(
-                            labelText: 'School Name',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) => value == null || value.isEmpty ? 'Please enter school name' : null,
+                          decoration: const InputDecoration(labelText: 'School Name *', border: OutlineInputBorder()),
+                          validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                         ),
+                        const SizedBox(height: 16),
+                        
+                        // FRS Scan Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _scanFrsPhoto(idx),
+                            icon: Icon(hasPhoto ? Icons.check_circle : Icons.face_retouching_natural),
+                            label: Text(hasPhoto ? 'FRS Scan Complete' : 'Live FRS Scan *'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: hasPhoto ? Colors.green : Colors.blueAccent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                        ),
+                        if (!hasPhoto)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Text('Live FRS face scan is required for future security/recognition.', style: TextStyle(fontSize: 12, color: Colors.red)),
+                          ),
                       ],
                     ),
                   ),
                 );
-              }).toList(),
-              const SizedBox(height: 16),
+              }),
+
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Checkbox(
                     value: _acceptedTerms,
-                    onChanged: (val) {
-                      setState(() {
-                        _acceptedTerms = val ?? false;
-                      });
-                    },
+                    onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
                   ),
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()));
                       },
-                      child: Text(
-                        'I agree to the Terms and Conditions',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('I accept the Terms and Conditions', style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue)),
                     ),
-                  ),
+                  )
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _proceed,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Proceed', style: TextStyle(fontSize: 18)),
+                child: const Text('Register & Verify', style: TextStyle(fontSize: 18)),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
