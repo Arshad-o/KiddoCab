@@ -64,11 +64,14 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
+    final existingRoleEmail = await AuthService.getUserRole(email);
+      final existingRolePhone = await AuthService.getUserRole(phone);
+      if (existingRoleEmail != null || existingRolePhone != null) {
+        final role = existingRoleEmail ?? existingRolePhone;
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User already exists with this email or phone number!'), backgroundColor: Colors.red),
+          SnackBar(content: Text('This email or phone is already registered as a ${role?.toUpperCase()}!'), backgroundColor: Colors.red),
         );
       }
       return;

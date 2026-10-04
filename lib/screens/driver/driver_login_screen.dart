@@ -23,8 +23,13 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
       return;
     }
     
-    if (!(await AuthService.checkUserExists(identifier))) {
+    final role = await AuthService.getUserRole(identifier);
+    if (role == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account does not exist, please register.')));
+      return;
+    }
+    if (role != 'driver') {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('This email is registered as a ${role.toUpperCase()}. Please use the correct login portal.')));
       return;
     }
     

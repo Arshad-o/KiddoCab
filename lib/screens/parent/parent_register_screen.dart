@@ -139,7 +139,10 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
     final phone = _phoneController.text.trim();
 
     // Check if user already exists
-    if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
+    final existingRoleEmail = await AuthService.getUserRole(email);
+      final existingRolePhone = await AuthService.getUserRole(phone);
+      if (existingRoleEmail != null || existingRolePhone != null) {
+        final role = existingRoleEmail ?? existingRolePhone;
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
