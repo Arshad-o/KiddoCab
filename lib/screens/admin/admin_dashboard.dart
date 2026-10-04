@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -14,12 +16,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
   
   Map<String, LatLng> _liveDrivers = {};
   List<Map<String, dynamic>> _securityAlerts = [];
+  Map<String, BitmapDescriptor> _customMarkers = {};
 
   @override
   void initState() {
     super.initState();
     _fetchSecurityAlerts();
     _listenToFleetLocations();
+  }
+
+  Future<BitmapDescriptor> _getMarkerForVehicleType(String? type) async {
+    if (_customMarkers.containsKey(type)) return _customMarkers[type]!;
+    
+    String assetPath = 'assets/images/tata_magic.png';
+    if (type == 'Auto Rickshaw') assetPath = 'assets/images/autoimg.jpg';
+    if (type == 'Large Auto') assetPath = 'assets/images/big_auto_img.jpg';
+    if (type == 'Tata Magic') assetPath = 'assets/images/tata_magic.png';
+    if (type == 'Cab' || type == 'Sedan') assetPath = 'assets/images/cab.avif';
+    
+    try {
+      ByteData data = await rootBundle.load(assetPath);
+      ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: 100);
+      ui.FrameInfo fi = await codec.getNextFrame();
+      final bytes = (await fi.image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
+      final bmp = BitmapDescriptor.fromBytes(bytes);
+      _customMarkers[type ?? 'unknown'] = bmp;
+      return bmp;
+    } catch (e) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+    }
   }
 
   void _fetchSecurityAlerts() async {
@@ -31,16 +56,32 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
+  Map<String, String> _driverVehicleMap = {};
+  Map<String, BitmapDescriptor> _driverMarkerIcons = {};
+
   void _listenToFleetLocations() {
     _supabase.channel('public:locations').onPostgresChanges(
       event: PostgresChangeEvent.insert,
       schema: 'public',
       table: 'locations',
-      callback: (payload) {
+      callback: (payload) async {
         final newRecord = payload.newRecord;
+        final driverId = newRecord['driver_id'].toString();
+        
+        // Fetch vehicle type if we don't have it
+        if (!_driverVehicleMap.containsKey(driverId)) {
+          final res = await _supabase.from('users').select('vehicle_type').eq('id', driverId).limit(1);
+          if (res.isNotEmpty && res[0]['vehicle_type'] != null) {
+            _driverVehicleMap[driverId] = res[0]['vehicle_type'];
+          } else {
+            _driverVehicleMap[driverId] = 'unknown';
+          }
+          _driverMarkerIcons[driverId] = await _getMarkerForVehicleType(_driverVehicleMap[driverId]);
+        }
+
         if (mounted) {
           setState(() {
-            _liveDrivers[newRecord['driver_id'].toString()] = LatLng(
+            _liveDrivers[driverId] = LatLng(
               newRecord['latitude'],
               newRecord['longitude'],
             );
@@ -70,8 +111,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return Marker(
           markerId: MarkerId(entry.key),
           position: entry.value,
-          infoWindow: InfoWindow(title: 'Driver ID: ${entry.key.substring(0, 6)}'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: InfoWindow(title: 'KiddoCab Driver', snippet: _driverVehicleMap[entry.key] ?? 'Tracking'),
+          icon: _driverMarkerIcons[entry.key] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         );
       }).toSet(),
     );
