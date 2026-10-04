@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
@@ -18,11 +19,44 @@ class _ParentDashboardState extends State<ParentDashboard> {
   final _supabase = Supabase.instance.client;
   RealtimeChannel? _locationsChannel;
 
+  GoogleMapController? _mapController;
+  LatLng? _currentPosition;
+
+
   @override
   void initState() {
     super.initState();
     _listenToDriverStatus();
+    _determinePosition();
   }
+
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    if (mounted) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+      if (_mapController != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(_currentPosition!, 16.0),
+        );
+      }
+    }
+  }
+
 
   void _listenToDriverStatus() {
     _locationsChannel = _supabase.channel('public:locations').onPostgresChanges(
@@ -164,13 +198,24 @@ class _ParentDashboardState extends State<ParentDashboard> {
     return Stack(
       children: [
         // Full Screen Map
-        const GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: LatLng(28.6139, 77.2090),
-            zoom: 14.0,
-          ),
+        GoogleMap(
+          initialCameraPosition: _currentPosition != null 
+              ? CameraPosition(target: _currentPosition!, zoom: 16.0)
+              : const CameraPosition(
+                  target: LatLng(28.6139, 77.2090),
+                  zoom: 14.0,
+                ),
           myLocationEnabled: true,
+          myLocationButtonEnabled: true,
           zoomControlsEnabled: false,
+          onMapCreated: (GoogleMapController controller) {
+            _mapController = controller;
+            if (_currentPosition != null) {
+              _mapController!.animateCamera(
+                CameraUpdate.newLatLngZoom(_currentPosition!, 16.0),
+              );
+            }
+          },
         ),
         // Floating Top Banner
         SafeArea(
