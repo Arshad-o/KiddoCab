@@ -13,16 +13,19 @@ class AuthService {
     return response.isNotEmpty;
   }
 
-  static Future<void> registerUser(String email, String phone, String role, {String? childName}) async {
+  static Future<void> registerUser(String email, String phone, String role, {String? childName, String? vehicleType}) async {
     final supabase = Supabase.instance.client;
     if (childName != null) currentChildName = childName;
     try {
-      await supabase.from('users').insert({
+      final data = {
         'email': email.toLowerCase(),
         'phone': phone,
         'role': role,
-        'child_name': childName,
-      });
+      };
+      if (childName != null) data['child_name'] = childName;
+      if (vehicleType != null) data['vehicle_type'] = vehicleType;
+
+      await supabase.from('users').insert(data);
     } catch (e) {
       print('Error saving to Supabase: $e');
     }

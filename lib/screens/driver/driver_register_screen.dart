@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../auth/otp_screen.dart';
 import '../driver_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
-
 import '../../services/auth_service.dart';
 
 class DriverRegisterScreen extends StatefulWidget {
@@ -20,15 +19,23 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
   final _emailController = TextEditingController();
   
   bool _acceptedTerms = false;
+  bool _isLoading = false;
+
+  String _selectedVehicle = 'School Bus';
+
+  final List<Map<String, dynamic>> _vehicleTypes = [
+    {'name': 'School Bus', 'icon': Icons.directions_bus, 'color': Colors.amber},
+    {'name': 'Mini Van', 'icon': Icons.airport_shuttle, 'color': Colors.blue},
+    {'name': 'SUV', 'icon': Icons.directions_car, 'color': Colors.grey},
+    {'name': 'Sedan', 'icon': Icons.local_taxi, 'color': Colors.black87},
+  ];
 
   Future<void> _proceed() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the Terms and Conditions')),
+        const SnackBar(content: Text('Please accept the Terms and Conditions', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
       );
       return;
     }
@@ -36,21 +43,27 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
 
+    setState(() => _isLoading = true);
+
     if ((await AuthService.checkUserExists(email)) || (await AuthService.checkUserExists(phone))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User already exists with this email or phone number!')),
-      );
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User already exists with this email or phone number!'), backgroundColor: Colors.red),
+        );
+      }
       return;
     }
 
-    
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending OTP...')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sending OTP...')),
+      );
+    }
 
     final success = await AuthService.sendOtp(email);
 
+    setState(() => _isLoading = false);
     if (!mounted) return;
 
     if (success) {
@@ -59,9 +72,14 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
         MaterialPageRoute(
           builder: (_) => OtpScreen(
             email: email,
-            // expectedOtp removed
             onSuccess: () {
-              AuthService.registerUser(email, phone, 'driver');
+              // Pass the selected vehicle type to the backend
+              AuthService.registerUser(
+                email, 
+                phone, 
+                'driver', 
+                vehicleType: _selectedVehicle,
+              );
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const DriverDashboard()),
@@ -73,141 +91,154 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email or try again.')),
+        const SnackBar(content: Text('Failed to send OTP. Please check your email.'), backgroundColor: Colors.red),
       );
     }
-  }
-
-  Widget _buildUploadButton(String label, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: OutlinedButton.icon(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Upload $label dialog opening...')),
-          );
-        },
-        icon: Icon(icon),
-        label: Text('Upload $label'),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.all(16),
-          alignment: Alignment.centerLeft,
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Driver Registration'),
-        backgroundColor: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.secondary,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Image.asset(
                   'assets/images/driverimg.webp',
-                  height: 80,
+                  height: 100,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.drive_eta, size: 80, color: Colors.amber),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
+              
+              Text('Personal Details', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
+              const Divider(),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Driver Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
+                decoration: const InputDecoration(labelText: 'Full Name *', border: OutlineInputBorder()),
+                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Phone Number *', border: OutlineInputBorder()),
                 keyboardType: TextInputType.phone,
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Email Address *', border: OutlineInputBorder()),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your email';
-                  if (!value.contains('@')) return 'Please enter a valid email';
+                  if (value == null || value.isEmpty) return 'Required';
+                  if (!value.contains('@')) return 'Invalid email';
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Documents & Photos',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 32),
+              
+              Text('Vehicle Selection', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
+              const Text('Select the vehicle type you will be driving. Parents will see this on their app.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const Divider(),
+              
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.1,
                 ),
+                itemCount: _vehicleTypes.length,
+                itemBuilder: (context, index) {
+                  final vehicle = _vehicleTypes[index];
+                  final isSelected = _selectedVehicle == vehicle['name'];
+                  
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedVehicle = vehicle['name'];
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? vehicle['color'].withOpacity(0.1) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? vehicle['color'] : Colors.grey.withOpacity(0.3),
+                          width: isSelected ? 3 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(vehicle['icon'], size: 48, color: vehicle['color']),
+                          const SizedBox(height: 12),
+                          Text(
+                            vehicle['name'],
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? vehicle['color'] : Colors.black87,
+                            ),
+                          ),
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 4.0),
+                              child: Icon(Icons.check_circle, color: Colors.green, size: 18),
+                            )
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-              const SizedBox(height: 12),
-              _buildUploadButton('RC Certificate', Icons.document_scanner),
-              _buildUploadButton('Vehicle Photos', Icons.directions_car),
-              _buildUploadButton('Driver Photo', Icons.person_pin),
-              const SizedBox(height: 16),
+
+              const SizedBox(height: 32),
               Row(
                 children: [
                   Checkbox(
                     value: _acceptedTerms,
-                    onChanged: (val) {
-                      setState(() {
-                        _acceptedTerms = val ?? false;
-                      });
-                    },
+                    onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
+                    activeColor: theme.colorScheme.secondary,
                   ),
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()),
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsAndConditionsScreen()));
                       },
-                      child: Text(
-                        'I agree to the Terms and Conditions',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('I accept the Terms and Conditions', style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue)),
                     ),
-                  ),
+                  )
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _proceed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: theme.colorScheme.secondary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Proceed', style: TextStyle(fontSize: 18)),
+                child: const Text('Register & Verify', style: TextStyle(fontSize: 18)),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
