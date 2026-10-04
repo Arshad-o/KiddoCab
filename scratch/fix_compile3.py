@@ -1,13 +1,9 @@
 import re
 
 with open('lib/screens/parent_dashboard.dart', 'r', encoding='utf-8') as f:
-    code = f.read()
+    content = f.read()
 
-# Fix MapType ambiguity
-code = code.replace("import 'package:supabase_flutter/supabase_flutter.dart';", "import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;")
-
-# Fix syntax error in _listenToDriverStatus
-old_listen = """        if (!_hasTriggeredStartNotification) {
+old_block = """        if (!_hasTriggeredStartNotification) {
           _hasTriggeredStartNotification = true;
           NotificationService.showNotification(
             id: 1,
@@ -24,7 +20,7 @@ old_listen = """        if (!_hasTriggeredStartNotification) {
       },
     ).subscribe();"""
 
-new_listen = """        if (!_hasTriggeredStartNotification) {
+new_block = """        if (!_hasTriggeredStartNotification) {
           _hasTriggeredStartNotification = true;
           NotificationService.showNotification(
             id: 1,
@@ -42,21 +38,7 @@ new_listen = """        if (!_hasTriggeredStartNotification) {
       },
     ).subscribe();"""
 
-code = code.replace(old_listen, new_listen)
+content = content.replace(old_block, new_block)
 
 with open('lib/screens/parent_dashboard.dart', 'w', encoding='utf-8') as f:
-    f.write(code)
-
-
-# Also fix MapType in Admin and Driver dashboards just in case!
-with open('lib/screens/admin/admin_dashboard.dart', 'r', encoding='utf-8') as f:
-    admin_code = f.read()
-admin_code = admin_code.replace("import 'package:supabase_flutter/supabase_flutter.dart';", "import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;")
-with open('lib/screens/admin/admin_dashboard.dart', 'w', encoding='utf-8') as f:
-    f.write(admin_code)
-
-with open('lib/screens/driver_dashboard.dart', 'r', encoding='utf-8') as f:
-    driver_code = f.read()
-driver_code = driver_code.replace("import 'package:supabase_flutter/supabase_flutter.dart';", "import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;")
-with open('lib/screens/driver_dashboard.dart', 'w', encoding='utf-8') as f:
-    f.write(driver_code)
+    f.write(content)

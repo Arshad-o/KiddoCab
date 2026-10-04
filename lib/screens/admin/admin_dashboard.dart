@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});

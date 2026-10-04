@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../auth/otp_screen.dart';
 import '../driver_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
@@ -22,6 +24,8 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
   bool _isLoading = false;
 
   String _selectedVehicle = 'Auto Rickshaw';
+  File? _vehiclePhoto;
+
 
   final List<Map<String, dynamic>> _vehicleTypes = [
     {'name': 'Auto Rickshaw', 'image': 'assets/images/autoimg.jpg', 'color': Colors.amber},
@@ -30,8 +34,23 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
     {'name': 'Cab', 'image': 'assets/images/cab.avif', 'color': Colors.grey},
   ];
 
+  Future<void> _captureVehiclePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() => _vehiclePhoto = File(pickedFile.path));
+    }
+  }
+
   Future<void> _proceed() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_vehiclePhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please capture a live photo of your vehicle!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -212,6 +231,45 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
                     ),
                   );
                 },
+              ),
+
+              const SizedBox(height: 24),
+              Text('Live Vehicle Photo *', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
+              const Text('Capture a clear photo of your actual vehicle showing the license plate.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _captureVehiclePhoto,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.withOpacity(0.5), style: BorderStyle.solid),
+                    image: _vehiclePhoto != null ? DecorationImage(image: FileImage(_vehiclePhoto!), fit: BoxFit.cover) : null,
+                  ),
+                  child: _vehiclePhoto == null 
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.camera_alt, size: 48, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('Tap to Capture Vehicle Photo', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      : Align(
+                          alignment: Alignment.bottomRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: _captureVehiclePhoto,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
               ),
 
               const SizedBox(height: 32),
