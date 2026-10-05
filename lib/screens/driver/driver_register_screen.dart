@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import '../auth/otp_screen.dart';
+
 import '../driver_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
 import '../../services/auth_service.dart';
@@ -19,6 +19,9 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _rePasswordController = TextEditingController();
+  String _gender = 'male';
   
   bool _acceptedTerms = false;
   bool _isLoading = false;
@@ -83,39 +86,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       );
     }
 
-    final success = await AuthService.sendOtp(email);
-
-    setState(() => _isLoading = false);
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            email: email,
-            onSuccess: () {
-              // Pass the selected vehicle type to the backend
-              AuthService.registerUser(
-                email, 
-                phone, 
-                'driver', 
-                vehicleType: _selectedVehicle,
-              );
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const DriverDashboard()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email.'), backgroundColor: Colors.red),
-      );
-    }
+    
   }
 
   @override

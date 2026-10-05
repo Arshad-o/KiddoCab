@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import '../auth/otp_screen.dart';
+
 import '../parent_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
 import '../../services/auth_service.dart';
@@ -31,6 +31,9 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
 
   // Common
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _rePasswordController = TextEditingController();
+  String _gender = 'male';
   String? _location;
   String? _dropLocation;
   bool _acceptedTerms = false;
@@ -162,39 +165,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       );
     }
 
-    final success = await AuthService.sendOtp(email);
-
-    setState(() => _isLoading = false);
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            email: email,
-            onSuccess: () {
-              // Extract names for the current logic
-              final firstChildName = _children[0]['name']!.text.trim();
-              
-              // In a real app, here you would upload the photos to Supabase Storage
-              // and insert the children into a 'children' table with parent_id.
-              
-              AuthService.registerUser(email, phone, 'parent', childName: firstChildName);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const ParentDashboard()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email.'), backgroundColor: Colors.red),
-      );
-    }
+    
   }
 
   Widget _buildPhotoPicker(String label, File? photo, VoidCallback onPick) {
@@ -444,6 +415,45 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
                 );
               }),
 
+              
+              const SizedBox(height: 24),
+              Text('Gender', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Male'),
+                      value: 'male',
+                      groupValue: _gender,
+                      onChanged: (value) => setState(() => _gender = value!),
+                      secondary: Image.asset('assets/images/male.jpg', width: 40, height: 40),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Female'),
+                      value: 'female',
+                      groupValue: _gender,
+                      onChanged: (value) => setState(() => _gender = value!),
+                      secondary: Image.asset('assets/images/female.jpg', width: 40, height: 40),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password *', border: OutlineInputBorder()),
+                obscureText: true,
+                validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _rePasswordController,
+                decoration: const InputDecoration(labelText: 'Re-enter Password *', border: OutlineInputBorder()),
+                obscureText: true,
+                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+              ),
               const SizedBox(height: 24),
               Row(
                 children: [

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../auth/otp_screen.dart';
+
 import '../driver_dashboard.dart';
 import 'driver_register_screen.dart';
 
@@ -38,33 +38,28 @@ class _DriverLoginScreenState extends State<DriverLoginScreen> {
     
     // Show a loading snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending OTP...')),
+      const SnackBar(content: Text('Logging in...')),
     );
 
-    final success = await AuthService.sendOtp(email);
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your password')));
+      return;
+    }
+
+    final success = await AuthService.loginWithPassword(email, password);
 
     if (!mounted) return;
 
     if (success) {
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            email: email,
-            // expectedOtp removed
-            onSuccess: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const DriverDashboard()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => const DriverDashboard()),
+        (route) => false,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email or try again.')),
+        const SnackBar(content: Text('Invalid email or password.'), backgroundColor: Colors.red),
       );
     }
   }

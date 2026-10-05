@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../auth/otp_screen.dart';
+
 import '../parent_dashboard.dart';
 import 'parent_register_screen.dart';
 
@@ -38,33 +38,28 @@ class _ParentLoginScreenState extends State<ParentLoginScreen> {
     
     // Show a loading snackbar
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sending OTP...')),
+      const SnackBar(content: Text('Logging in...')),
     );
 
-    final success = await AuthService.sendOtp(email);
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your password')));
+      return;
+    }
+
+    final success = await AuthService.loginWithPassword(email, password);
 
     if (!mounted) return;
 
     if (success) {
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => OtpScreen(
-            email: email,
-            // expectedOtp removed
-            onSuccess: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => ParentDashboard()),
-                (route) => false,
-              );
-            },
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => const ParentDashboard()),
+        (route) => false,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send OTP. Please check your email or try again.')),
+        const SnackBar(content: Text('Invalid email or password.'), backgroundColor: Colors.red),
       );
     }
   }

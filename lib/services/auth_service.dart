@@ -3,58 +3,73 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
 class AuthService {
   static String? currentChildName;
 
-  static Future<bool> checkUserExists(String identifier) async {
+  static Future<String?> getUserRole(String identifier) async {
     final supabase = Supabase.instance.client;
+    final lowerId = identifier.toLowerCase().trim();
     final response = await supabase
         .from('users')
-        .select('id')
-        .or('email.eq.$identifier,phone.eq.$identifier')
+        .select('role')
+        .or('email.eq.$lowerId,phone.eq.$lowerId')
         .limit(1);
-    return response.isNotEmpty;
+    
+    if (response.isNotEmpty) {
+      return response.first['role'] as String?;
+    }
+    return null;
   }
 
-  static Future<void> registerUser(String email, String phone, String role, {String? childName, String? vehicleType}) async {
+  static Future<bool> checkUserExists(String identifier) async {
+    final role = await getUserRole(identifier);
+    return role != null;
+  }
+
+  static Future<bool> registerUserWithPassword(String email, String password, String phone, String role, String gender, {String? childName, String? vehicleType}) async {
     final supabase = Supabase.instance.client;
     if (childName != null) currentChildName = childName;
     try {
+      final cleanEmail = email.toLowerCase().trim();
+      
+      // Create user in Supabase Auth
+      final authResponse = await supabase.auth.signUp(
+        email: cleanEmail,
+        password: password,
+      );
+
+      if (authResponse.user == null) return false;
+
+      // Insert into users table
       final data = {
-        'email': email.toLowerCase(),
-        'phone': phone,
+        'id': authResponse.user!.id,
+        'email': cleanEmail,
+        'phone': phone.trim(),
         'role': role,
+        'gender': gender,
       };
       if (childName != null) data['child_name'] = childName;
       if (vehicleType != null) data['vehicle_type'] = vehicleType;
 
-      await supabase.from('users').insert(data);
-    } catch (e) {
-      print('Error saving to Supabase: $e');
-    }
-  }
-
-  static Future<bool> sendOtp(String email) async {
-    try {
-      await Supabase.instance.client.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: true,
-      );
+      await supabase.from('users').upsert(data);
       return true;
     } catch (e) {
-      print('OTP Send Error: $e');
+      print('Error saving to Supabase: $e');
       return false;
     }
   }
 
-  static Future<bool> verifyOtp(String email, String token) async {
+  static Future<bool> loginWithPassword(String email, String password) async {
     try {
-      final res = await Supabase.instance.client.auth.verifyOTP(
-        type: OtpType.email,
-        token: token,
-        email: email,
+      final res = await Supabase.instance.client.auth.signInWithPassword(
+        email: email.toLowerCase().trim(),
+        password: password,
       );
       return res.session != null;
     } catch (e) {
-      print('OTP Verify Error: $e');
+      print('Login Error: $e');
       return false;
     }
+  }
+
+  static Future<void> logout() async {
+    await Supabase.instance.client.auth.signOut();
   }
 }

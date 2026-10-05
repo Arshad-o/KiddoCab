@@ -494,13 +494,36 @@ class _ParentDashboardState extends State<ParentDashboard> {
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () async {
-              await _supabase.auth.signOut();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ParentLoginScreen()),
-                  (route) => false,
-                );
+              final bool? confirmLogout = await showDialog<bool>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Confirm Logout'),
+                    content: const Text('Do you really want to log out of KiddoCab?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: const Text('Log Out'),
+                      ),
+                    ],
+                  );
+                },
+              );
+
+              if (confirmLogout == true) {
+                await _supabase.auth.signOut();
+                if (mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ParentLoginScreen()),
+                    (route) => false,
+                  );
+                }
               }
             },
             icon: const Icon(Icons.logout),
