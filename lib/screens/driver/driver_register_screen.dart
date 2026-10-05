@@ -35,7 +35,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
     {'name': 'Auto Rickshaw', 'image': 'assets/images/autoimg.jpg', 'color': Colors.amber},
     {'name': 'Large Auto', 'image': 'assets/images/big_auto_img.jpg', 'color': Colors.deepOrange},
     {'name': 'Tata Magic', 'image': 'assets/images/tata_magic.png', 'color': Colors.blue},
-    {'name': 'Cab', 'image': 'assets/images/cab.avif', 'color': Colors.grey},
+    {'name': 'Cab', 'image': 'assets/images/cab.png', 'color': Colors.grey},
   ];
 
   Future<void> _captureVehiclePhoto() async {
