@@ -144,16 +144,29 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
 
     // Check if user already exists
     final existingRoleEmail = await AuthService.getUserRole(email);
-      final existingRolePhone = await AuthService.getUserRole(phone);
-      if (existingRoleEmail != null || existingRolePhone != null) {
-        final role = existingRoleEmail ?? existingRolePhone;
+    if (existingRoleEmail != null) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('These credentials already exist! Please use a different email or phone.'),
+          SnackBar(
+            content: Text('This EMAIL is already registered as a ${existingRoleEmail.toUpperCase()}!'),
             backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
+    final existingRolePhone = await AuthService.getUserRole(phone);
+    if (existingRolePhone != null) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('This PHONE NUMBER is already registered as a ${existingRolePhone.toUpperCase()}!'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
