@@ -81,13 +81,46 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       return;
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sending OTP...')),
-      );
+    final password = _passwordController.text.trim();
+    final rePassword = _rePasswordController.text.trim();
+    if (password != rePassword) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match!'), backgroundColor: Colors.red));
+      }
+      return;
     }
 
-    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Account...')));
+    }
+
+    final success = await AuthService.registerUserWithPassword(email, password, phone, 'driver', _gender);
+
+    setState(() => _isLoading = false);
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpScreen(
+            email: email,
+            onSuccess: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const DriverDashboard()),
+                (route) => false,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to register. Email may already be in use.'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override

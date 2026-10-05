@@ -160,13 +160,46 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       return;
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sending OTP...')),
-      );
+    final password = _passwordController.text.trim();
+    final rePassword = _rePasswordController.text.trim();
+    if (password != rePassword) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match!'), backgroundColor: Colors.red));
+      }
+      return;
     }
 
-    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Account...')));
+    }
+
+    final success = await AuthService.registerUserWithPassword(email, password, phone, 'parent', _gender, childName: _children[0]['name']!.text.trim());
+
+    setState(() => _isLoading = false);
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OtpScreen(
+            email: email,
+            onSuccess: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const ParentDashboard()),
+                (route) => false,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to register. Email may already be in use.'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Widget _buildPhotoPicker(String label, File? photo, VoidCallback onPick) {
