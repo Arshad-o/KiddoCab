@@ -58,30 +58,34 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   Future<void> _checkAuth() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomeScreen()));
-      return;
-    }
-    
-    // User is logged in, fetch their role
-    final email = session.user.email;
-    if (email != null) {
-      final role = await AuthService.getUserRole(email);
-      if (!mounted) return;
+    // Delay execution until after the first frame is rendered
+    // to safely use Navigator context.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) {
+        if (!mounted) return;
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomeScreen()));
+        return;
+      }
       
-      if (role == 'parent') {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ParentDashboard()));
-      } else if (role == 'driver') {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DriverDashboard()));
+      // User is logged in, fetch their role
+      final email = session.user.email;
+      if (email != null) {
+        final role = await AuthService.getUserRole(email);
+        if (!mounted) return;
+        
+        if (role == 'parent') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ParentDashboard()));
+        } else if (role == 'driver') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DriverDashboard()));
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomeScreen()));
+        }
       } else {
+        if (!mounted) return;
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomeScreen()));
       }
-    } else {
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomeScreen()));
-    }
+    });
   }
 
   @override
