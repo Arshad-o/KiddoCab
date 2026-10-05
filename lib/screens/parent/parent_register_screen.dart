@@ -8,6 +8,7 @@ import 'dart:io';
 import '../parent_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
 import '../../services/auth_service.dart';
+import '../auth/otp_screen.dart';
 
 class ParentRegisterScreen extends StatefulWidget {
   const ParentRegisterScreen({super.key});

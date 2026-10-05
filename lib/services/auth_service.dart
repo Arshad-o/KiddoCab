@@ -72,4 +72,31 @@ class AuthService {
   static Future<void> logout() async {
     await Supabase.instance.client.auth.signOut();
   }
+
+  static Future<bool> sendOtp(String email) async {
+    try {
+      await Supabase.instance.client.auth.resend(
+        type: OtpType.signup,
+        email: email.toLowerCase().trim(),
+      );
+      return true;
+    } catch (e) {
+      print('OTP Send Error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> verifyOtp(String email, String token) async {
+    try {
+      final res = await Supabase.instance.client.auth.verifyOTP(
+        type: OtpType.signup,
+        token: token.trim(),
+        email: email.toLowerCase().trim(),
+      );
+      return res.session != null;
+    } catch (e) {
+      print('OTP Verify Error: $e');
+      return false;
+    }
+  }
 }

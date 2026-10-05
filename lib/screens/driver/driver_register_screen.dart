@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../driver_dashboard.dart';
 import '../terms_and_conditions_screen.dart';
 import '../../services/auth_service.dart';
+import '../auth/otp_screen.dart';
 
 class DriverRegisterScreen extends StatefulWidget {
   const DriverRegisterScreen({super.key});
