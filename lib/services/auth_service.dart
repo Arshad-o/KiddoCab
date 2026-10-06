@@ -48,7 +48,7 @@ class AuthService {
       if (childName != null) data['child_name'] = childName;
       if (vehicleType != null) data['vehicle_type'] = vehicleType;
 
-      await supabase.from('users').upsert(data);
+      await supabase.from('users').insert(data);
       return null; // Success (no error)
     } on AuthException catch (e) {
       return e.message; // Return the exact error message from Supabase Auth!
