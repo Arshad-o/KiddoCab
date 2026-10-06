@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
@@ -77,8 +78,14 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
       final bytes = allBytes.done().buffer.asUint8List();
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-      final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation) ?? InputImageRotationValue.rotation0deg;
-      final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw) ?? InputImageFormatValue.nv21;
+      final imageRotation = InputImageRotation.values.firstWhere(
+        (r) => r.rawValue == camera.sensorOrientation,
+        orElse: () => InputImageRotation.rotation0deg,
+      );
+      final inputImageFormat = InputImageFormat.values.firstWhere(
+        (f) => f.rawValue == image.format.raw,
+        orElse: () => InputImageFormat.nv21,
+      );
 
       final inputImageData = InputImageMetadata(
         size: imageSize,
