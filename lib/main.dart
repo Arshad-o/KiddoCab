@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'utils/app_settings.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
 import 'screens/welcome_screen.dart';
@@ -35,7 +36,7 @@ class KiddoCabApp extends StatelessWidget {
           primary: const Color(0xFF1E3A8A),
           secondary: const Color(0xFFF59E0B), 
           tertiary: const Color(0xFF10B981), 
-          background: const Color(0xFFF3F4F6), 
+          surface: const Color(0xFFF3F4F6), 
         ),
       ),
       home: const AuthWrapper(),

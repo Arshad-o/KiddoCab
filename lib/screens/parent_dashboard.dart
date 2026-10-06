@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../utils/app_settings.dart';
+import '../utils/map_styles.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -356,6 +358,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
               )
           },
           onMapCreated: (GoogleMapController controller) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          controller.setMapStyle(MapStyles.getStyle(AppSettings.instance.mapStyle, isDark));
             _mapController = controller;
             if (_driverPosition != null) {
               _mapController!.animateCamera(CameraUpdate.newLatLngZoom(_driverPosition!, 16.0));

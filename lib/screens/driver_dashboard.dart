@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../utils/app_settings.dart';
+import '../utils/map_styles.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
@@ -576,7 +578,15 @@ class _DriverDashboardState extends State<DriverDashboard> {
 
   // --- TAB 2: Live Map ---
   Widget _buildLiveMap(ThemeData theme) {
-    return GoogleMap(
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) {
+        // Dynamically apply style when settings or theme changes
+        if (_mapController != null) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          _mapController!.setMapStyle(MapStyles.getStyle(AppSettings.instance.mapStyle, isDark));
+        }
+        return GoogleMap(
       mapType: _selectedMapType,
       initialCameraPosition: _currentPosition != null 
           ? CameraPosition(target: _currentPosition!, zoom: 16.0)
@@ -593,6 +603,8 @@ class _DriverDashboardState extends State<DriverDashboard> {
           _mapController!.animateCamera(
             CameraUpdate.newLatLngZoom(_currentPosition!, 16.0),
           );
+      }
+    );
         }
       },
     );
