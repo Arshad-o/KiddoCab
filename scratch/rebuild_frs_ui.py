@@ -1,4 +1,6 @@
-import 'dart:ui';
+import os
+
+new_code = """import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
@@ -336,3 +338,8 @@ class HUDOverlayPainter extends CustomPainter {
     return oldDelegate.isVerified != isVerified || oldDelegate.cutoutRect != cutoutRect;
   }
 }
+"""
+
+with open('lib/screens/driver/live_frs_scanner_screen.dart', 'w', encoding='utf-8') as f:
+    f.write(new_code)
+print("FRS Screen rebuilt successfully.")
