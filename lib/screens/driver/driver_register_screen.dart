@@ -29,6 +29,8 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
 
   String _selectedVehicle = 'Auto Rickshaw';
   File? _vehiclePhoto;
+  File? _rcPhoto;
+  File? _licensePhoto;
 
 
   final List<Map<String, dynamic>> _vehicleTypes = [
@@ -46,12 +48,42 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
     }
   }
 
+  Future<void> _captureRcPhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() => _rcPhoto = File(pickedFile.path));
+    }
+  }
+
+  Future<void> _captureLicensePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() => _licensePhoto = File(pickedFile.path));
+    }
+  }
+
   Future<void> _proceed() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_vehiclePhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please capture a live photo of your vehicle!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    if (_rcPhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please capture a photo of the RC document!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    if (_licensePhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please capture a photo of your Driving License!'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -328,6 +360,65 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
                             ),
                           ),
                         ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              
+              Text('Document Uploads', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
+              const Divider(),
+              
+              const Text('Registration Certificate (RC)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Capture a clear photo of the vehicle RC.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: _captureRcPhoto,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                    image: _rcPhoto != null ? DecorationImage(image: FileImage(_rcPhoto!), fit: BoxFit.cover) : null,
+                  ),
+                  child: _rcPhoto == null 
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.description, size: 40, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('Tap to capture RC', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      : null,
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              const Text('Driving License', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Capture a clear photo of your valid driving license.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: _captureLicensePhoto,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                    image: _licensePhoto != null ? DecorationImage(image: FileImage(_licensePhoto!), fit: BoxFit.cover) : null,
+                  ),
+                  child: _licensePhoto == null 
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.badge, size: 40, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('Tap to capture License', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      : null,
                 ),
               ),
 
