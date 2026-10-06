@@ -32,10 +32,10 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
   void initState() {
     super.initState();
     _faceDetector = FaceDetector(options: FaceDetectorOptions(
-      enableContours: true,
-      enableLandmarks: true,
+      enableContours: false,
+      enableLandmarks: false,
       enableClassification: false,
-      enableTracking: true,
+      enableTracking: false,
       performanceMode: FaceDetectorMode.fast, // Fast mode for real-time bounding box tracking
     ));
     _initializeCamera();
@@ -57,9 +57,9 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
 
       _cameraController = CameraController(
         camera,
-        ResolutionPreset.medium, // Medium resolution is better for real-time ML processing speed
+        ResolutionPreset.high, // Higher resolution helps detection logic
         enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -93,7 +93,7 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
       );
       final inputImageFormat = InputImageFormat.values.firstWhere(
         (f) => f.rawValue == image.format.raw,
-        orElse: () => InputImageFormat.nv21,
+        orElse: () => Platform.isAndroid ? InputImageFormat.yuv420 : InputImageFormat.bgra8888,
       );
 
       final inputImageData = InputImageMetadata(
