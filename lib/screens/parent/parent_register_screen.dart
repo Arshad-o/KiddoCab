@@ -3,6 +3,7 @@ import 'location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import '../driver/live_frs_scanner_screen.dart';
 import 'dart:io';
 
 import '../parent_dashboard.dart';
@@ -61,16 +62,15 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   }
 
   Future<void> _scanFrsPhoto(int childIndex) async {
-    final picker = ImagePicker();
-    // Using camera for live FRS scan
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera, 
-      preferredCameraDevice: CameraDevice.front,
-      imageQuality: 80,
+    final childName = _children[childIndex]['name']!.text.trim();
+    final resultPath = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => LiveFrsScannerScreen(studentName: childName.isNotEmpty ? childName : 'Child ${childIndex + 1}')),
     );
-    if (pickedFile != null) {
+    
+    if (resultPath != null && resultPath is String && resultPath != "success_no_image") {
       setState(() {
-        _children[childIndex]['frs_photo'] = File(pickedFile.path);
+        _children[childIndex]['frs_photo'] = File(resultPath);
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

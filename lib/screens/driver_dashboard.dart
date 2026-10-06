@@ -388,12 +388,12 @@ class _DriverDashboardState extends State<DriverDashboard> {
     }
 
     // Within Geo-Fence: Run Live ML Kit FRS Scanner
-    final verified = await Navigator.push(
+    final verifiedResult = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => LiveFrsScannerScreen(studentName: studentName)),
     );
 
-    if (verified == true) {
+    if (verifiedResult != null && verifiedResult != false) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('FRS Match Successful! $studentName boarded.'), backgroundColor: Colors.green),
       );

@@ -111,10 +111,18 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
             _isVerified = true;
             _statusMessage = 'Identity Verified!';
           });
-          // Stop stream and pop with success
+          // Stop stream, take a photo, and pop with success
           await _cameraController?.stopImageStream();
+          String? capturedPath;
+          try {
+            final XFile picture = await _cameraController!.takePicture();
+            capturedPath = picture.path;
+          } catch (e) {
+            print("Could not capture high-res photo: $e");
+            capturedPath = "success_no_image";
+          }
           await Future.delayed(const Duration(milliseconds: 1000)); // Let them see the success message
-          if (mounted) Navigator.pop(context, true);
+          if (mounted) Navigator.pop(context, capturedPath);
         }
       }
     } catch (e) {
