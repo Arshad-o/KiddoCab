@@ -465,28 +465,24 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
               
               const SizedBox(height: 24),
               Text('Gender', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<String>(
+                              Column(
+                  children: [
+                    RadioListTile<String>(
                       title: const Text('Male'),
                       value: 'male',
                       groupValue: _gender,
                       onChanged: (value) => setState(() => _gender = value!),
                       secondary: Image.asset('assets/images/male.jpg', width: 40, height: 40),
                     ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<String>(
+                    RadioListTile<String>(
                       title: const Text('Female'),
                       value: 'female',
                       groupValue: _gender,
                       onChanged: (value) => setState(() => _gender = value!),
                       secondary: Image.asset('assets/images/female.jpg', width: 40, height: 40),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,

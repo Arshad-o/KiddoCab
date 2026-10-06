@@ -194,6 +194,40 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password *', border: OutlineInputBorder()),
+                obscureText: true,
+                validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _rePasswordController,
+                decoration: const InputDecoration(labelText: 'Re-enter Password *', border: OutlineInputBorder()),
+                obscureText: true,
+                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 24),
+              Text('Gender', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
+              Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Male'),
+                    value: 'male',
+                    groupValue: _gender,
+                    onChanged: (value) => setState(() => _gender = value!),
+                    secondary: Image.asset('assets/images/male.jpg', width: 40, height: 40),
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Female'),
+                    value: 'female',
+                    groupValue: _gender,
+                    onChanged: (value) => setState(() => _gender = value!),
+                    secondary: Image.asset('assets/images/female.jpg', width: 40, height: 40),
+                  ),
+                ],
+              ),
               const SizedBox(height: 32),
               
               Text('Vehicle Selection', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.secondary)),
