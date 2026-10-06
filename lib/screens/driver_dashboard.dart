@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide MapType;
 import '../services/notification_service.dart';
 import 'package:image_picker/image_picker.dart';
+import 'driver/live_frs_scanner_screen.dart';
 import 'driver/driver_login_screen.dart';
 import 'chat_screen.dart';
 
@@ -386,10 +387,13 @@ class _DriverDashboardState extends State<DriverDashboard> {
       return;
     }
 
-    // Within Geo-Fence: Run Camera
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera, preferredCameraDevice: CameraDevice.front);
-    if (pickedFile != null) {
+    // Within Geo-Fence: Run Live ML Kit FRS Scanner
+    final verified = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => LiveFrsScannerScreen(studentName: studentName)),
+    );
+
+    if (verified == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('FRS Match Successful! $studentName boarded.'), backgroundColor: Colors.green),
       );
