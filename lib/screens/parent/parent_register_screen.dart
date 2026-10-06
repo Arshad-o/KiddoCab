@@ -187,12 +187,12 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Account...')));
     }
 
-    final success = await AuthService.registerUserWithPassword(email, password, phone, 'parent', _gender, childName: _children[0]['name']!.text.trim());
+    final errorMessage = await AuthService.registerUserWithPassword(email, password, phone, 'parent', _gender, childName: _children[0]['name']!.text.trim());
 
     setState(() => _isLoading = false);
     if (!mounted) return;
 
-    if (success) {
+    if (errorMessage == null) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -210,7 +210,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to register. Email may already be in use.'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Registration Failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
       );
     }
   }

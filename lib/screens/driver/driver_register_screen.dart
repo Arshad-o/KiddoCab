@@ -112,12 +112,12 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Account...')));
     }
 
-    final success = await AuthService.registerUserWithPassword(email, password, phone, 'driver', _gender);
+    final errorMessage = await AuthService.registerUserWithPassword(email, password, phone, 'driver', _gender);
 
     setState(() => _isLoading = false);
     if (!mounted) return;
 
-    if (success) {
+    if (errorMessage == null) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -135,7 +135,7 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to register. Email may already be in use.'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Registration Failed: $errorMessage'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
       );
     }
   }

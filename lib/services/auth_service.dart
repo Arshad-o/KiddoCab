@@ -23,7 +23,7 @@ class AuthService {
     return role != null;
   }
 
-  static Future<bool> registerUserWithPassword(String email, String password, String phone, String role, String gender, {String? childName, String? vehicleType}) async {
+  static Future<String?> registerUserWithPassword(String email, String password, String phone, String role, String gender, {String? childName, String? vehicleType}) async {
     final supabase = Supabase.instance.client;
     if (childName != null) currentChildName = childName;
     try {
@@ -35,7 +35,7 @@ class AuthService {
         password: password,
       );
 
-      if (authResponse.user == null) return false;
+      if (authResponse.user == null) return "Unknown error: No user returned from Supabase.";
 
       // Insert into users table
       final data = {
@@ -49,10 +49,11 @@ class AuthService {
       if (vehicleType != null) data['vehicle_type'] = vehicleType;
 
       await supabase.from('users').upsert(data);
-      return true;
+      return null; // Success (no error)
+    } on AuthException catch (e) {
+      return e.message; // Return the exact error message from Supabase Auth!
     } catch (e) {
-      print('Error saving to Supabase: $e');
-      return false;
+      return e.toString();
     }
   }
 
