@@ -13,6 +13,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   GoogleMapController? _mapController;
   LatLng _currentCenter = const LatLng(28.6139, 77.2090); // Default placeholder
   bool _isLoading = true;
+  MapType _currentMapType = MapType.normal;
 
   @override
   void initState() {
@@ -81,6 +82,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             onCameraMove: (position) {
               _currentCenter = position.target;
             },
+            mapType: _currentMapType,
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             zoomControlsEnabled: false,
@@ -96,6 +98,41 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           
           if (_isLoading)
             const Center(child: CircularProgressIndicator()),
+            
+          // Map Type Switcher
+          Positioned(
+            top: 16,
+            right: 16,
+            child: PopupMenuButton<MapType>(
+              icon: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.layers, color: theme.colorScheme.primary),
+              ),
+              onSelected: (MapType result) {
+                setState(() {
+                  _currentMapType = result;
+                });
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<MapType>>[
+                const PopupMenuItem<MapType>(
+                  value: MapType.normal,
+                  child: Text('Normal View'),
+                ),
+                const PopupMenuItem<MapType>(
+                  value: MapType.satellite,
+                  child: Text('Satellite View'),
+                ),
+                const PopupMenuItem<MapType>(
+                  value: MapType.terrain,
+                  child: Text('Terrain View'),
+                ),
+                const PopupMenuItem<MapType>(
+                  value: MapType.hybrid,
+                  child: Text('Hybrid View'),
+                ),
+              ],
+            ),
+          ),
             
           // Confirm Button
           Positioned(
