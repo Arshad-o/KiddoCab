@@ -1,4 +1,6 @@
-import 'dart:io';
+import os
+
+new_code = """import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -376,3 +378,8 @@ class FaceMeshPainter extends CustomPainter {
     return oldDelegate.faces != faces || oldDelegate.isVerified != isVerified;
   }
 }
+"""
+
+with open('lib/screens/driver/live_frs_scanner_screen.dart', 'w', encoding='utf-8') as f:
+    f.write(new_code)
+print("FRS Screen rebuilt with real-time Leap-style dynamic tracking.")
