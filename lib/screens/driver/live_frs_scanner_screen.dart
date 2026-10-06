@@ -57,9 +57,9 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
 
       _cameraController = CameraController(
         camera,
-        ResolutionPreset.high, // Higher resolution helps detection logic
+        ResolutionPreset.low, // Low resolution is crucial on Android to prevent YUV byte stride corruption
         enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -91,10 +91,7 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
         (r) => r.rawValue == camera.sensorOrientation,
         orElse: () => InputImageRotation.rotation0deg,
       );
-      final inputImageFormat = InputImageFormat.values.firstWhere(
-        (f) => f.rawValue == image.format.raw,
-        orElse: () => Platform.isAndroid ? InputImageFormat.yuv420 : InputImageFormat.bgra8888,
-      );
+      final inputImageFormat = Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888;
 
       final inputImageData = InputImageMetadata(
         size: imageSize,
