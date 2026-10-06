@@ -23,7 +23,7 @@ class AuthService {
     return role != null;
   }
 
-  static Future<String?> registerUserWithPassword(String email, String password, String phone, String role, String gender, {String? childName, String? vehicleType}) async {
+  static Future<String?> registerUserWithPassword(String email, String password, String phone, String role, String gender, {String? childName, String? vehicleType, String? state, String? district, String? mandal, String? pincode}) async {
     final supabase = Supabase.instance.client;
     if (childName != null) currentChildName = childName;
     try {
@@ -47,6 +47,10 @@ class AuthService {
       };
       if (childName != null) data['child_name'] = childName;
       if (vehicleType != null) data['vehicle_type'] = vehicleType;
+      if (state != null) data['state'] = state;
+      if (district != null) data['district'] = district;
+      if (mandal != null) data['mandal'] = mandal;
+      if (pincode != null) data['pincode'] = pincode;
 
       await supabase.from('users').insert(data);
       return null; // Success (no error)

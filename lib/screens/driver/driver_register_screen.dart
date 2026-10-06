@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/location_data.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -22,7 +23,11 @@ class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _rePasswordController = TextEditingController();
-  String _gender = 'male';
+    String _gender = 'male';
+  String? _selectedState;
+  String? _selectedDistrict;
+  String? _selectedMandal;
+  final TextEditingController _pincodeController = TextEditingController();
   
   bool _acceptedTerms = false;
   bool _isLoading = false;

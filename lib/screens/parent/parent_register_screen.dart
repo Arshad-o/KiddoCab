@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/location_data.dart';
 import 'location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -35,7 +36,11 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _rePasswordController = TextEditingController();
-  String _gender = 'male';
+    String _gender = 'male';
+  String? _selectedState;
+  String? _selectedDistrict;
+  String? _selectedMandal;
+  final TextEditingController _pincodeController = TextEditingController();
   String? _location;
   String? _dropLocation;
   bool _acceptedTerms = false;
@@ -187,7 +192,7 @@ class _ParentRegisterScreenState extends State<ParentRegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Account...')));
     }
 
-    final errorMessage = await AuthService.registerUserWithPassword(email, password, phone, 'parent', _gender, childName: _children[0]['name']!.text.trim());
+    final errorMessage = await AuthService.registerUserWithPassword(email, password, phone, 'parent', _gender, childName: _children[0]['name']!.text.trim(), state: _selectedState, district: _selectedDistrict, mandal: _selectedMandal, pincode: _pincodeController.text.trim());
 
     setState(() => _isLoading = false);
     if (!mounted) return;
