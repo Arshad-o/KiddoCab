@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>KiddoCab requires camera access to perform live facial recognition (FRS) matching for student security and to capture document photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KiddoCab needs photo library access so drivers can upload their license and vehicle registration documents.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KiddoCab requires your location to track rides, coordinate pickups, and display your position on the live map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>KiddoCab requires background location tracking so parents can securely monitor the live position of the cab during a ride, even when the app is minimized.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -28,13 +36,37 @@
 	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>KiddoCab requires camera access to perform live facial recognition (FRS) matching for student security and to capture document photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KiddoCab needs photo library access so drivers can upload their license and vehicle registration documents.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KiddoCab requires your location to track rides, coordinate pickups, and display your position on the live map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>KiddoCab requires background location tracking so parents can securely monitor the live position of the cab during a ride, even when the app is minimized.</string>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 		<key>UISceneConfigurations</key>
 		<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>KiddoCab requires camera access to perform live facial recognition (FRS) matching for student security and to capture document photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KiddoCab needs photo library access so drivers can upload their license and vehicle registration documents.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KiddoCab requires your location to track rides, coordinate pickups, and display your position on the live map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>KiddoCab requires background location tracking so parents can securely monitor the live position of the cab during a ride, even when the app is minimized.</string>
 			<key>UIWindowSceneSessionRoleApplication</key>
 			<array>
 				<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>KiddoCab requires camera access to perform live facial recognition (FRS) matching for student security and to capture document photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KiddoCab needs photo library access so drivers can upload their license and vehicle registration documents.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KiddoCab requires your location to track rides, coordinate pickups, and display your position on the live map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>KiddoCab requires background location tracking so parents can securely monitor the live position of the cab during a ride, even when the app is minimized.</string>
 					<key>UISceneClassName</key>
 					<string>UIWindowScene</string>
 					<key>UISceneConfigurationName</key>
