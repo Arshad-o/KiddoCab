@@ -45,15 +45,15 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       );
       final newLatLng = LatLng(position.latitude, position.longitude);
 
-      setState(() {
-        _currentCenter = newLatLng;
-        _isLoading = false;
-      });
-
-      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(newLatLng, 17.0));
+      if (mounted) {
+        setState(() {
+          _currentCenter = newLatLng;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      if (context.mounted) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not get location: $e'),
@@ -74,92 +74,99 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
       ),
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: _currentCenter, zoom: 16),
-            onMapCreated: (controller) => _mapController = controller,
-            onCameraMove: (position) {
-              _currentCenter = position.target;
-            },
-            mapType: _currentMapType,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false,
-          ),
-          
-          // Static Map Pin in the exact center of the screen
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 40.0), // Shift up to point exactly at center
-              child: Icon(Icons.location_pin, size: 50, color: Colors.red),
-            ),
-          ),
-          
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator()),
-            
-          // Map Type Switcher
-          Positioned(
-            top: 16,
-            right: 16,
-            child: PopupMenuButton<MapType>(
-              icon: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.layers, color: theme.colorScheme.primary),
-              ),
-              onSelected: (MapType result) {
-                setState(() {
-                  _currentMapType = result;
-                });
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<MapType>>[
-                const PopupMenuItem<MapType>(
-                  value: MapType.normal,
-                  child: Text('Normal View'),
-                ),
-                const PopupMenuItem<MapType>(
-                  value: MapType.satellite,
-                  child: Text('Satellite View'),
-                ),
-                const PopupMenuItem<MapType>(
-                  value: MapType.terrain,
-                  child: Text('Terrain View'),
-                ),
-                const PopupMenuItem<MapType>(
-                  value: MapType.hybrid,
-                  child: Text('Hybrid View'),
-                ),
-              ],
-            ),
-          ),
-            
-          // Confirm Button
-          Positioned(
-            bottom: 40,
-            left: 20,
-            right: 20,
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Return the exact coordinates the user selected
-                  Navigator.pop(context, _currentCenter);
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator()) 
+        : Stack(
+            children: [
+              GoogleMap(
+                initialCameraPosition: CameraPosition(target: _currentCenter, zoom: 16),
+                onMapCreated: (controller) => _mapController = controller,
+                onCameraMove: (position) {
+                  _currentCenter = position.target;
                 },
-                icon: const Icon(Icons.check_circle),
-                label: const Text('Confirm This Location', style: TextStyle(fontSize: 18)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.secondary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 8,
+                mapType: _currentMapType,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: false,
+                // Ensure gestures are fully enabled explicitly
+                scrollGesturesEnabled: true,
+                zoomGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                rotateGesturesEnabled: true,
+              ),
+              
+              // Static Map Pin in the exact center of the screen
+              // Wrapped in IgnorePointer so it doesn't block map gestures!
+              const IgnorePointer(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 40.0), // Shift up to point exactly at center
+                    child: Icon(Icons.location_pin, size: 50, color: Colors.red),
+                  ),
                 ),
               ),
-            ),
-          )
-        ],
-      ),
+              
+              // Map Type Switcher
+              Positioned(
+                top: 16,
+                right: 16,
+                child: PopupMenuButton<MapType>(
+                  icon: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.layers, color: theme.colorScheme.primary),
+                  ),
+                  onSelected: (MapType result) {
+                    setState(() {
+                      _currentMapType = result;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<MapType>>[
+                    const PopupMenuItem<MapType>(
+                      value: MapType.normal,
+                      child: Text('Normal View'),
+                    ),
+                    const PopupMenuItem<MapType>(
+                      value: MapType.satellite,
+                      child: Text('Satellite View'),
+                    ),
+                    const PopupMenuItem<MapType>(
+                      value: MapType.terrain,
+                      child: Text('Terrain View'),
+                    ),
+                    const PopupMenuItem<MapType>(
+                      value: MapType.hybrid,
+                      child: Text('Hybrid View'),
+                    ),
+                  ],
+                ),
+              ),
+                
+              // Confirm Button
+              Positioned(
+                bottom: 40,
+                left: 20,
+                right: 20,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Return the exact coordinates the user selected
+                      Navigator.pop(context, _currentCenter);
+                    },
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text('Confirm This Location', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.secondary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 8,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
     );
   }
 }
