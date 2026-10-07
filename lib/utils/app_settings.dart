@@ -9,9 +9,11 @@ class AppSettings extends ChangeNotifier {
 
   ThemeMode _themeMode = ThemeMode.system;
   String _mapStyle = 'standard';
+  int _driverReminderMinutes = 15;
 
   ThemeMode get themeMode => _themeMode;
   String get mapStyle => _mapStyle;
+  int get driverReminderMinutes => _driverReminderMinutes;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -22,6 +24,7 @@ class AppSettings extends ChangeNotifier {
     else _themeMode = ThemeMode.system;
 
     _mapStyle = _prefs.getString('mapStyle') ?? 'standard';
+    _driverReminderMinutes = _prefs.getInt('driverReminderMinutes') ?? 15;
     notifyListeners();
   }
 
@@ -34,6 +37,12 @@ class AppSettings extends ChangeNotifier {
   void setMapStyle(String style) {
     _mapStyle = style;
     _prefs.setString('mapStyle', style);
+    notifyListeners();
+  }
+
+  void setDriverReminderMinutes(int minutes) {
+    _driverReminderMinutes = minutes;
+    _prefs.setInt('driverReminderMinutes', minutes);
     notifyListeners();
   }
 }
