@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
@@ -79,11 +80,11 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
   Future<void> _processImage(CameraImage image, CameraDescription camera) async {
     _isProcessing = true;
     try {
-      final WriteBuffer allBytes = WriteBuffer();
+      final BytesBuilder allBytes = BytesBuilder();
       for (final Plane plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
+        allBytes.add(plane.bytes);
       }
-      final bytes = allBytes.done().buffer.asUint8List();
+      final bytes = allBytes.toBytes();
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
       
