@@ -581,31 +581,30 @@ class _DriverDashboardState extends State<DriverDashboard> {
     return ListenableBuilder(
       listenable: AppSettings.instance,
       builder: (context, _) {
-        // Dynamically apply style when settings or theme changes
         if (_mapController != null) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           _mapController!.setMapStyle(MapStyles.getStyle(AppSettings.instance.mapStyle, isDark));
         }
         return GoogleMap(
-      mapType: _selectedMapType,
-      initialCameraPosition: _currentPosition != null 
-          ? CameraPosition(target: _currentPosition!, zoom: 16.0)
-          : const CameraPosition(
-              target: LatLng(28.6139, 77.2090),
-              zoom: 14.0,
-            ),
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
-      zoomControlsEnabled: false,
-      onMapCreated: (GoogleMapController controller) {
-        _mapController = controller;
-        if (_currentPosition != null) {
-          _mapController!.animateCamera(
-            CameraUpdate.newLatLngZoom(_currentPosition!, 16.0),
-          );
-      }
-    );
-        }
+          mapType: _selectedMapType,
+          initialCameraPosition: _currentPosition != null 
+              ? CameraPosition(target: _currentPosition!, zoom: 16.0)
+              : const CameraPosition(
+                  target: LatLng(28.6139, 77.2090),
+                  zoom: 14.0,
+                ),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
+          zoomControlsEnabled: false,
+          onMapCreated: (GoogleMapController controller) {
+            _mapController = controller;
+            if (_currentPosition != null) {
+              _mapController!.animateCamera(
+                CameraUpdate.newLatLngZoom(_currentPosition!, 16.0),
+              );
+            }
+          },
+        );
       },
     );
   }
