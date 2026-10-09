@@ -58,9 +58,9 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
 
       _cameraController = CameraController(
         camera,
-        ResolutionPreset.low, // Low resolution is crucial on Android to prevent YUV byte stride corruption
+        ResolutionPreset.high, // High resolution for accurate ML Kit Face Detection (Leap app structure)
         enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
       );
 
       await _cameraController!.initialize();
@@ -92,11 +92,32 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
         (r) => r.rawValue == camera.sensorOrientation,
         orElse: () => InputImageRotation.rotation0deg,
       );
-      final inputImageFormat = Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888;
-
+      final inputImageFormat = Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormat.bgra8888;      // Leap app structure for accurate orientation
+      final sensorOrientation = camera.sensorOrientation;
+      InputImageRotation? rotation;
+      if (Platform.isIOS) {
+        rotation = InputImageRotation.values.firstWhere(
+          (r) => r.rawValue == sensorOrientation,
+          orElse: () => InputImageRotation.rotation0deg,
+        );
+      } else if (Platform.isAndroid) {
+        var rotationCompensation = sensorOrientation;
+        if (camera.lensDirection == CameraLensDirection.front) {
+          // front-facing
+          rotationCompensation = (sensorOrientation + 0) % 360;
+        } else {
+          // back-facing
+          rotationCompensation = (sensorOrientation - 0 + 360) % 360;
+        }
+        rotation = InputImageRotation.values.firstWhere(
+          (r) => r.rawValue == rotationCompensation,
+          orElse: () => InputImageRotation.rotation0deg,
+        );
+      }
+      
       final inputImageData = InputImageMetadata(
         size: imageSize,
-        rotation: imageRotation,
+        rotation: rotation ?? InputImageRotation.rotation0deg,
         format: inputImageFormat,
         bytesPerRow: image.planes.first.bytesPerRow,
       );
