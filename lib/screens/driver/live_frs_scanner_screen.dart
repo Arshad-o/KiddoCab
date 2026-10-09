@@ -58,9 +58,9 @@ class _LiveFrsScannerScreenState extends State<LiveFrsScannerScreen> with Single
 
       _cameraController = CameraController(
         camera,
-        ResolutionPreset.high, // High resolution for accurate ML Kit Face Detection (Leap app structure)
+        ResolutionPreset.high, // High resolution for accurate ML Kit Face Detection
         enableAudio: false,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888, // MUST be nv21 for ML Kit Android
       );
 
       await _cameraController!.initialize();
